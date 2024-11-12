@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отчет для {{ item.name }}</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Отчет для {{ item.name }}</h1>
+        <p>ID: {{ item.id }}</p>
+        <p>Проблема: {{ item.problem }}</p>
+        <p>Дата: {{ item.date }}</p>
+        <form action="/submit_report" method="post">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Отправить отчет</button>
+        </form>
+    </div>
+</body>
+</html>

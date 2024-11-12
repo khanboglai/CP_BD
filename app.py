@@ -1,24 +1,25 @@
-from fastapi import FastAPI, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Request, Form
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
-from passlib.context import CryptContext
 from starlette.middleware.sessions import SessionMiddleware
 from repositories.init_db import init_db
-from repositories.user import insert_user, auth_user
+
+from routers import auth
+from fpdf import FPDF
 import logging
+from settings import DATABASE_URL
 from datetime import datetime
-from schemas.user import UserModel
 
 
-# init
+# инициализация приложения
 app = FastAPI()
+
+# подключение маршрутов
+app.include_router(auth.router, tags=["auth"])
+
+
 templates = Jinja2Templates(directory="templates")
 
-# DB
-DATABASE_URL = "postgresql://postgres:pas@172.17.0.2:5432/service_center"
-
-# hash
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # session
 app.add_middleware(SessionMiddleware, secret_key="your_secret_key")
@@ -39,61 +40,46 @@ async def read_root(request: Request):
     return templates.TemplateResponse("welcome.html", {"request": request})
 
 
-@app.get("/login")
-async def login_form(request: Request):
-     return templates.TemplateResponse("login.html", {"request": request})
-
-
-@app.post("/login")
-async def login(request: Request, login: str = Form(...), password: str = Form(...)):
-    status = await auth_user(login, password, DATABASE_URL)
-    if status is None:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    
-    request.session['user'] = login
-    return RedirectResponse(url="/trouble_tickets", status_code=303)
+items = [
+    {"id": 1, "name": "Скат", "problem": "Не подключается к интеренету", "date": datetime},
+    {"id": 2, "name": "Автоураган", "problem": "Не заапускается от аккамулятора", "date": datetime},
+    {"id": 3, "name": "Азимут", "problem": "Разбит корпус", "date": datetime},
+]
 
 
 @app.get("/trouble_tickets", response_class=HTMLResponse)
-async def trouble_tickets_page(request: Request):
-    if 'user' not in request.session:
-        raise HTTPException(status_code=403, detail="Not authenticated")
-    return templates.TemplateResponse("tt.html", {"request": request})
+async def read_table(request: Request):
+    return templates.TemplateResponse("table.html", {"request": request, "items": items})
 
 
-@app.get("/logout")
-async def logout(request: Request):
-    request.session.pop('user', None)
-    return templates.TemplateResponse("login.html", {"request": request})
+@app.post("/report")
+async def create_report(request: Request, item_id: int = Form(...)):
+    # Найдите элемент по ID
+    item = next((item for item in items if item["id"] == item_id), None)
+    if item:
+        return templates.TemplateResponse("report.html", {"request": request, "item": item})
+    return {"message": "Элемент не найден"}
 
 
-@app.get("/register/", response_class=HTMLResponse)
-async def get_register_form(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+@app.post("/submit_report")
+async def submit_report(item_id: int = Form(...), description: str = Form(...)):
+    item = next((item for item in items if item["id"] == item_id), None)
+    if item:
+        # Создание PDF-файла с использованием FPDF
+        pdf_filename = f"report_{item_id}.pdf"
+        pdf = FPDF()
+        pdf.add_page()
 
+        pdf.add_font('DejaVuSans', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
+        pdf.set_font("DejaVuSans", size=12)
+        
+        pdf.cell(200, 10, txt=f"Отчет для элемента с ID: {item_id}", ln=True)
+        pdf.cell(200, 10, txt=f"Название: {item['name']}", ln=True)
+        pdf.cell(200, 10, txt=f"Проблема: {item['problem']}", ln=True)
+        pdf.cell(200, 10, txt=f"Дата: {item['date']}", ln=True)
+        pdf.cell(200, 10, txt=f"Дополнительное описание: {description}", ln=True)
 
-@app.post("/register/")
-async def register_user(
-    name: str = Form(...),
-    surname: str = Form(...),
-    birth_date: str = Form(...),
-    age: int = Form(...),
-    email: str = Form(...),
-    login: str = Form(...),
-    hashed_password: str = Form(...),
-):
-    # Преобразуем строку даты в объект datetime
-    birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
-    
-    user_data = UserModel(
-        name=name,
-        surname=surname,
-        birth_date=birth_date,
-        age=age,
-        email=email,
-        login=login,
-        hashed_password=hashed_password,
-    )
-    
-    user_id = await insert_user(user_data.model_dump(), DATABASE_URL)  # Вставка пользователя в БД
-    return RedirectResponse(url="/login", status_code=303)
+        pdf.output(pdf_filename)
+
+    # Возврат PDF-файла пользователю
+    return FileResponse(pdf_filename, media_type='application/pdf', filename=pdf_filename)
