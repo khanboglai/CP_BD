@@ -1,13 +1,15 @@
+""" Main app """
+
 from fastapi import FastAPI, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from repositories.init_db import init_db
 
-from routers import auth
+from routers import auth, storage
 from fpdf import FPDF
 import logging
-from settings import DATABASE_URL
+from config import DATABASE_URL
 from datetime import datetime
 
 
@@ -16,6 +18,7 @@ app = FastAPI()
 
 # подключение маршрутов
 app.include_router(auth.router, tags=["auth"])
+app.include_router(storage.router, tags=["storage"])
 
 
 templates = Jinja2Templates(directory="templates")
@@ -32,7 +35,7 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def startup():
     logger.info("Start app")
-    await init_db(DATABASE_URL)
+    await init_db()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -72,7 +75,6 @@ async def submit_report(item_id: int = Form(...), description: str = Form(...)):
 
         pdf.add_font('DejaVuSans', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
         pdf.set_font("DejaVuSans", size=12)
-        
         pdf.cell(200, 10, txt=f"Отчет для элемента с ID: {item_id}", ln=True)
         pdf.cell(200, 10, txt=f"Название: {item['name']}", ln=True)
         pdf.cell(200, 10, txt=f"Проблема: {item['problem']}", ln=True)

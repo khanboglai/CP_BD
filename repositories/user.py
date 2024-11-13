@@ -1,21 +1,30 @@
-import asyncpg
+""" Функции для работы с таблицей пользователей """
+
 import logging
+import asyncpg
 import bcrypt
+from config import DATABASE_URL
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str):
-    # генерация соли и хеширование пароля
+
+    """ генерация соли и хеширование пароля """
+
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
 
-async def insert_user(user_data: dict, database_url):
+async def insert_user(user_data: dict):
+
+    """ вставка пользователя в базу данных """
+
     try:
-        conn = await asyncpg.connect(database_url)
+        conn = await asyncpg.connect(DATABASE_URL)
 
         query = """INSERT INTO users (name, surname, birth_date, age, email, login, hashed_password)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -35,15 +44,18 @@ async def insert_user(user_data: dict, database_url):
         user_id = await conn.fetchval(query, *values)
         await conn.close()
 
-        logger.info(f"insert query done for user {user_data['login']}")
+        logger.info("insert query done for user %s", user_data['login'])
         return user_id
-    except Exception as e:
+    except ConnectionError as e:
         logger.error(e)
 
 
-async def auth_user(login: str, password: str, database_url):
+async def auth_user(login: str, password: str):
+
+    """ проверка данных пользователя """
+
     try:
-        conn = await asyncpg.connect(database_url)
+        conn = await asyncpg.connect(DATABASE_URL)
 
         query = """SELECT hashed_password FROM users WHERE login = $1"""
         res = await conn.fetchrow(query, login)
@@ -51,13 +63,12 @@ async def auth_user(login: str, password: str, database_url):
         await conn.close()
 
         if res is None:
-            raise Exception("Login don't exist")
+            raise AttributeError("Login don't exist")
 
         if bcrypt.checkpw(password.encode('utf-8'), res['hashed_password'].encode('utf-8')):
-            logger.info(f"auth {login} complete")
+            logger.info("auth %s complete", login)
             return True  # Успешная аутентификация
-        else:
-            return False  # Неверный пароль
-        
-    except Exception as e:
+        return False  # Неверный пароль
+
+    except ConnectionError as e:
         logger.error(e)

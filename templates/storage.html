@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Склад</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="mb-4">Таблица склада</h2>
+
+    <table class="table table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th>Название</th>
+                <th>Количество</th>
+                <th>Комплекс</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>
+                    <form action="/update_inventory" method="post" style="display: inline;">
+                        <input type="hidden" name="id" value="{{ item.id }}">
+                        <input type="number" name="count" value="{{ item.count }}" min="0" required>
+                        <button type="submit" class="btn btn-primary">Обновить</button>
+                    </form>
+                </td>
+                <td>{{ item.complex_name }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Добавить блок</h3>
+    <form action="/storage" method="post">
+        <div class="form-group">
+            <label for="name">Название блока:</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="count">Количетсво:</label>
+            <input type="number" class="form-control" id="count" name="count" required>
+        </div>
+        <div class="form-group">
+            <label for="complex">Комплекс:</label>
+            <input type="text" class="form-control" id="complex_name" name="complex_name" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Добавить товар</button>
+    </form>
+</div>
+
+</body>
+</html>

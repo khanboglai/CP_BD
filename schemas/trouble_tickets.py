@@ -1,6 +1,13 @@
-from pydantic import BaseModel, field_validator
+""" Описание модели для заявок на ремонт """
+
+from datetime import datetime
+from pydantic import BaseModel
 
 
 class TTModel(BaseModel):
-    """Модель для заявок на ремонт"""
-    ...
+    """ Модель для заявок на ремонт """
+
+    name: str
+    date: datetime
+    problem: str
+    status: bool
