@@ -38,13 +38,6 @@ async def login(request: Request, login: str = Form(...), password: str = Form(.
     return RedirectResponse(url="/trouble_tickets", status_code=303)
 
 
-# @router.get("/trouble_tickets", response_class=HTMLResponse)
-# async def trouble_tickets_page(request: Request):
-#     if 'user' not in request.session:
-#         raise HTTPException(status_code=403, detail="Not authenticated")
-#     return templates.TemplateResponse("tt.html", {"request": request})
-
-
 @router.get("/logout")
 async def logout(request: Request):
 

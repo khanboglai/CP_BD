@@ -31,7 +31,7 @@ async def create_table_users():
         ''')
 
         await conn.close()
-        logger.info("Create table: users")
+        logger.info("Created table: users")
     except ConnectionError as e:
         logger.error(e)
 
@@ -52,7 +52,31 @@ async def create_table_storage():
         ''')
 
         await conn.close()
-        logger.info("Create table: storage")
+        logger.info("Created table: storage")
+    except ConnectionError as e:
+        logger.error(e)
+
+
+async def create_table_tt():
+    """ создание таблицы заявок """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS trouble_tickets (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(300),
+            problem VARCHAR(1000),
+            date TIMESTAMP,
+            status BOOLEAN
+            )
+        ''')
+
+        await conn.close()
+
+        logger.info("Created table: trouble_tickets ")
+
     except ConnectionError as e:
         logger.error(e)
 
@@ -63,3 +87,4 @@ async def init_db():
 
     await create_table_users()
     await create_table_storage()
+    await create_table_tt()
