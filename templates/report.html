@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отчет для {{ item.name }}</title>
-    <!-- Подключение Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -18,6 +17,15 @@
             <div class="form-group">
                 <label for="description">Описание:</label>
                 <textarea id="description" name="description" class="form-control" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Детали:</label><br>
+                {% for detail in details %}
+                <div>
+                    <input type="checkbox" id="detail{{ detail.id }}" name="details" value="{{ detail.id }}">
+                    <label for="detail{{ detail.id }}">{{ detail.name }}</label>
+                </div>
+                {% endfor %}
             </div>
             <button type="submit" class="btn btn-primary">Отправить отчет</button>
         </form>

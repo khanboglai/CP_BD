@@ -63,3 +63,21 @@ async def get_row(id: int):
         return row
     except ConnectionError as e:
         logger.error(e)
+
+
+async def get_details(complex_name: str):
+    """ Фукнция для выдачи делалей для комплекса """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """SELECT * FROM storage WHERE complex_name = $1"""
+
+        rows = await conn.fetch(query, complex_name)
+        result = [dict(row) for row in rows]
+        await conn.close()
+
+        return result
+
+    except ConnectionError as e:
+        logger.error(e)

@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fpdf import FPDF
 
-from repositories.tt import get_data, update_get_row, get_row
+from repositories.tt import get_data, update_get_row, get_row, get_details
 
 
 templates = Jinja2Templates(directory="templates")
@@ -36,17 +36,29 @@ async def create_report(request: Request, item_id: int = Form(...)):
         raise HTTPException(status_code=403, detail="Not authenticated")
     
     item = await update_get_row(item_id)
-    if item:
-        return templates.TemplateResponse("report.html", {"request": request, "item": item})
+    details = await get_details(item['name'])
+
+    if item and details:
+        return templates.TemplateResponse("report.html", {"request": request, "item": item, "details": details})
     return {"message": "Элемент не найден"}
 
 
 @router.post("/submit_report")
-async def submit_report(request: Request, id: int = Form(...), description: str = Form(...)):
+async def submit_report(request: Request, id: int = Form(...), description: str = Form(...), 
+                        details: list = Form(...)):
     """ Создание отчета """
 
     if 'user' not in request.session:
         raise HTTPException(status_code=403, detail="Not authenticated")
+    
+    # selected_details = []
+    # for detail_id in details:
+    #     # Найдите соответствующее имя для каждого ID
+    #     index = int(detail_id) - 1  # Предполагается, что ID начинаются с 1
+    #     selected_details.append({
+    #         "id": detail_id,
+    #         "name": detail_names[index]
+    #     })
     
     user = request.session['user']
 
@@ -65,6 +77,8 @@ async def submit_report(request: Request, id: int = Form(...), description: str 
         pdf.cell(200, 10, txt=f"Проблема: {item['problem']}", ln=True)
         pdf.cell(200, 10, txt=f"Дата: {item['date']}", ln=True)
         pdf.cell(200, 10, txt=f"Дополнительное описание: {description}", ln=True)
+        print(details)
+        pdf.cell(200, 10, txt=f"Список деталей: {details}", ln=True)
 
         pdf.output(pdf_filename)
 
