@@ -71,10 +71,10 @@ async def submit_report(request: Request, id: int = Form(...), description: str 
         # тут еще будет логика с сохранением данных о работе в таблицу
 
     # Возврат PDF-файла пользователю
-    return RedirectResponse("/files/{user}", status_code=303)
+    return RedirectResponse("/files", status_code=303)
 
 
-@router.get("/files/{user}", response_class=HTMLResponse)
+@router.get("/files", response_class=HTMLResponse)
 async def read_root(request: Request):
     # Получаем список PDF-файлов
 
