@@ -44,8 +44,11 @@ async def insert_user(user_data: dict):
         user_id = await conn.fetchval(query, *values)
         await conn.close()
 
-        logger.info("insert query done for user %s", user_data['login'])
-        return user_id
+        if user_id:
+            logger.info("insert query done for user %s", user_data['login'])
+            return user_id
+        logger.error(f"User with login {user_data['login']} already exist!")
+        return None
     except ConnectionError as e:
         logger.error(e)
 
@@ -62,8 +65,8 @@ async def auth_user(login: str, password: str):
 
         await conn.close()
 
-        if res is None:
-            raise AttributeError("Login don't exist")
+        if res is None: # если пользователя нет
+            return False
 
         if bcrypt.checkpw(password.encode('utf-8'), res['hashed_password'].encode('utf-8')):
             logger.info("auth %s complete", login)
