@@ -51,21 +51,27 @@ async def submit_report(request: Request, id: int = Form(...), description: str 
     if 'user' not in request.session:
         raise HTTPException(status_code=403, detail="Not authenticated")
     
-    # selected_details = []
-    # for detail_id in details:
-    #     # Найдите соответствующее имя для каждого ID
-    #     index = int(detail_id) - 1  # Предполагается, что ID начинаются с 1
-    #     selected_details.append({
-    #         "id": detail_id,
-    #         "name": detail_names[index]
-    #     })
-    
     user = request.session['user']
 
     item = await get_row(id)
+    det_info = await get_details(item['name']) # получаем список деталей по имени комплекса
+
+    names = []
+
+    for detail in det_info: # выдача детаелй, которые были выбраны на фронте
+        if detail['id'] in list(map(int, details)):
+            names.append(detail['name'])
+
+    '''
+        тут надо сделать проверку на пустоту списка деталей, должно быть выбрано что-то
+
+        нужно добавить выбор, на случай если не менялись блоки, и  добавить сообщение об ошибке
+    '''
 
     if item:
         # Создание PDF-файла с использованием FPDF
+
+        ''' Убрать этот блок в отдельный файлё '''
         pdf_filename = f"report_{id}_{user}.pdf"
         pdf = FPDF()
         pdf.add_page()
@@ -77,12 +83,11 @@ async def submit_report(request: Request, id: int = Form(...), description: str 
         pdf.cell(200, 10, txt=f"Проблема: {item['problem']}", ln=True)
         pdf.cell(200, 10, txt=f"Дата: {item['date']}", ln=True)
         pdf.cell(200, 10, txt=f"Дополнительное описание: {description}", ln=True)
-        print(details)
-        pdf.cell(200, 10, txt=f"Список деталей: {details}", ln=True)
+        pdf.cell(200, 10, txt=f"Список деталей: {', '.join(names)}", ln=True)
 
         pdf.output(pdf_filename)
 
-        # тут еще будет логика с сохранением данных о работе в таблицу
+        # тут еще будет логика с сохранениемdetails данных о работе в таблицу
 
     # Возврат PDF-файла пользователю
     return RedirectResponse("/files", status_code=303)
