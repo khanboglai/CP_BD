@@ -60,7 +60,7 @@ async def auth_user(login: str, password: str):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT hashed_password FROM users WHERE login = $1"""
+        query = """SELECT id, hashed_password FROM users WHERE login = $1"""
         res = await conn.fetchrow(query, login)
 
         await conn.close()
@@ -70,7 +70,7 @@ async def auth_user(login: str, password: str):
 
         if bcrypt.checkpw(password.encode('utf-8'), res['hashed_password'].encode('utf-8')):
             logger.info("auth %s complete", login)
-            return True  # Успешная аутентификация
+            return res['id']  # Успешная аутентификация
         return False  # Неверный пароль
 
     except ConnectionError as e:

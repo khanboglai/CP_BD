@@ -35,6 +35,7 @@ async def login(request: Request, login: str = Form(...), password: str = Form(.
         return templates.TemplateResponse("login.html", {"request": request, "error": "Пользователя с такими данными не существует"})
 
     request.session['user'] = login
+    request.session['id'] = status
     return RedirectResponse(url="/trouble_tickets", status_code=303)
 
 

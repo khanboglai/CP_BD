@@ -1,15 +1,18 @@
 """ Маршруты для страницы заявок """
 
 import os
-import json
-
+import pytz
+from datetime import datetime
+import uuid
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
-from fpdf import FPDF
 
-from repositories.tt import get_data, update_get_row, get_row, get_details, update_get_detail
 
+from repositories.tt import get_data, update_get_row, get_details, update_get_detail
+from repositories.document import insert_data
+from schemas.document import Document
+from pdf_generator import create_pdf
 
 templates = Jinja2Templates(directory="templates")
 
@@ -74,34 +77,30 @@ async def submit_report(request: Request,
     user = request.session['user']
 
     names = []
-    selected_details = list(map(int, selected_details))
     if selected_details is not None:
+        selected_details = list(map(int, selected_details))
         for detail_id in selected_details: # выдача детаелй, которые были выбраны на фронте и вычитание из таблицы склада
             names.append(await update_get_detail(detail_id))
     
 
     try:
-        # Создание PDF-файла с использованием FPDF
+        timezone = pytz.timezone('Europe/Moscow')
+        creation_time = datetime.now() # Разобраться с локализацией времени, проблема с БД``
+        report_filename = f"report_{uuid.uuid4()}_{item_data['id']}_{creation_time}_{user}.pdf"
+        create_pdf(report_filename, item_data, description, names)
 
-        ''' Убрать этот блок в отдельный файлё '''
-        pdf_filename = f"report_{id}_{user}.pdf"
-        pdf = FPDF()
-        pdf.add_page()
 
-        pdf.add_font('DejaVuSans', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
-        pdf.set_font("DejaVuSans", size=12)
-        pdf.cell(200, 10, txt=f"Отчет для элемента с ID: {id}", ln=True)
-        pdf.cell(200, 10, txt=f"Название: {name}", ln=True)
-        pdf.cell(200, 10, txt=f"Проблема: {problem}", ln=True)
-        pdf.cell(200, 10, txt=f"Дата: {date}", ln=True)
-        pdf.cell(200, 10, txt=f"Дополнительное описание: {description}", ln=True)
-        pdf.cell(200, 10, txt=f"Список деталей: {', '.join(names)}", ln=True)
+        doc = Document(
+            name=report_filename,
+            creation_date=creation_time,
+            author_id=request.session.get('id')
+        )
 
-        pdf.output(pdf_filename)
+        await insert_data(doc)
 
         # тут еще будет логика с сохранениемdetails данных о работе в таблицу
     except Exception as e:
-        return {"message": "Невозможно создать файл!"}
+        return {"message": e}
 
     # Возврат PDF-файла пользователю
     return RedirectResponse("/files", status_code=303)

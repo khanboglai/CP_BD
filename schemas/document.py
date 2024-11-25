@@ -1,7 +1,7 @@
 """ Описание модели отчета """
 
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class Document(BaseModel):

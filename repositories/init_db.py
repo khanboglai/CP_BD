@@ -81,6 +81,30 @@ async def create_table_tt():
         logger.error(e)
 
 
+async def create_table_document():
+    """ Создание таблицы для докментов """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        await conn.execute('''
+            CREATE TABLE IF NOT EXISTS documents (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(300),
+            creation_date TIMESTAMP,
+            author_id INT,
+            FOREIGN KEY (author_id) REFERENCES users(id)
+            )
+        ''')
+
+        await conn.close()
+        
+        logger.info("Created table: documents ")
+
+    except ConnectionError as e:
+        logger.error(e)
+
+
 async def init_db():
 
     """ создание таблиц в базе данных """
@@ -88,3 +112,4 @@ async def init_db():
     await create_table_users()
     await create_table_storage()
     await create_table_tt()
+    await create_table_document()
