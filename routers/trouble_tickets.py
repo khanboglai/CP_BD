@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from fpdf import FPDF
 
-from repositories.tt import get_data, update_get_row, get_row, get_details
+from repositories.tt import get_data, update_get_row, get_row, get_details, update_get_detail
 
 
 templates = Jinja2Templates(directory="templates")
@@ -73,17 +73,12 @@ async def submit_report(request: Request,
 
     user = request.session['user']
 
-    det_info = await get_details(name) # получаем список деталей по имени комплекса
-
     names = []
+    selected_details = list(map(int, selected_details))
     if selected_details is not None:
-        for detail in det_info: # выдача детаелй, которые были выбраны на фронте
-            if detail['id'] in list(map(int, selected_details)):
-                names.append(detail['name'])
+        for detail_id in selected_details: # выдача детаелй, которые были выбраны на фронте и вычитание из таблицы склада
+            names.append(await update_get_detail(detail_id))
     
-    '''
-        вычесть со склада детали
-    '''
 
     try:
         # Создание PDF-файла с использованием FPDF

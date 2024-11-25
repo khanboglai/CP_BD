@@ -81,3 +81,23 @@ async def get_details(complex_name: str):
 
     except ConnectionError as e:
         logger.error(e)
+
+
+async def update_get_detail(id: int):
+    """ Функция для выдачи имени детали и обновления колличества """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """UPDATE storage
+        SET count = count - 1
+        WHERE id = $1
+        RETURNING name
+        """
+        complex_name = await conn.fetchval(query, id)
+
+        await conn.close()
+
+        return complex_name
+    except ConnectionError as e:
+        logger.error(e)
