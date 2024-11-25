@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Отчет для {{ item.name }}</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function toggleDetails(checkbox) {
+            const detailsSection = document.getElementById('details-section');
+            const detailCheckboxes = document.querySelectorAll('input[name="selected_details"]');
+
+            if (checkbox.checked) {
+                // Скрыть секцию с деталями
+                detailsSection.style.display = 'none';
+                
+                // Сбросить все выбранные детали
+                detailCheckboxes.forEach((cb) => {
+                    cb.checked = false;
+                });
+            } else {
+                // Показать секцию с деталями
+                detailsSection.style.display = 'block';
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -12,20 +31,36 @@
         <p>ID: {{ item.id }}</p>
         <p>Проблема: {{ item.problem }}</p>
         <p>Дата: {{ item.date }}</p>
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+
         <form action="/submit_report" method="post">
             <input type="hidden" name="id" value="{{ item.id }}">
+            <input type="hidden" name="name" value="{{ item.name }}">
+            <input type="hidden" name="problem" value="{{ item.problem }}">
+            <input type="hidden" name="date" value="{{ item.date }}">
             <div class="form-group">
                 <label for="description">Описание:</label>
                 <textarea id="description" name="description" class="form-control" rows="4"></textarea>
             </div>
             <div class="form-group">
                 <label>Детали:</label><br>
-                {% for detail in details %}
                 <div>
-                    <input type="checkbox" id="detail{{ detail.id }}" name="details" value="{{ detail.id }}">
-                    <label for="detail{{ detail.id }}">{{ detail.name }}</label>
+                    <input type="checkbox" id="no-details" name="no_details" value="1" onclick="toggleDetails(this)">
+                    <label for="no-details">Не выбирать детали</label>
                 </div>
-                {% endfor %}
+                <div id="details-section">
+                    {% for detail in details %}
+                    <div>
+                        <input type="checkbox" id="detail{{ detail.id }}" name="selected_details" value="{{ detail.id }}">
+                        <label for="detail{{ detail.id }}">{{ detail.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Отправить отчет</button>
         </form>

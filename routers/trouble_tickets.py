@@ -1,6 +1,7 @@
 """ Маршруты для страницы заявок """
 
 import os
+import json
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
@@ -20,7 +21,7 @@ async def read_table(request: Request):
     """ отображение данных на странице """
 
     if 'user' not in request.session:
-        raise HTTPException(status_code=403, detail="Not authenticated")
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
 
     items = await get_data()
     if items is not None:
@@ -39,36 +40,52 @@ async def create_report(request: Request, item_id: int = Form(...)):
     details = await get_details(item['name'])
 
     if item and details:
-        return templates.TemplateResponse("report.html", {"request": request, "item": item, "details": details})
+        return templates.TemplateResponse("report.html", {"request": request, "item": item, "details": details, "error": None})
     return {"message": "Элемент не найден"}
 
 
 @router.post("/submit_report")
-async def submit_report(request: Request, id: int = Form(...), description: str = Form(...), 
-                        details: list = Form(...)):
+async def submit_report(request: Request, 
+                        id: int = Form(...), 
+                        name: str = Form(...),
+                        problem: str = Form(...),
+                        date: str = Form(...),
+                        description: str = Form(...), 
+                        no_details: int = Form(None),
+                        selected_details: list = Form(None)):
     """ Создание отчета """
 
+    item_data = {
+        "id": id,
+        "name": name,
+        "problem": problem,
+        "date": date
+    }
+
+    if selected_details is None and no_details is None:
+        details = await get_details(name)
+        return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Выберите что-то из списка."})
+
+
     if 'user' not in request.session:
-        raise HTTPException(status_code=403, detail="Not authenticated")
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
     
+
     user = request.session['user']
 
-    item = await get_row(id)
-    det_info = await get_details(item['name']) # получаем список деталей по имени комплекса
+    det_info = await get_details(name) # получаем список деталей по имени комплекса
 
     names = []
-
-    for detail in det_info: # выдача детаелй, которые были выбраны на фронте
-        if detail['id'] in list(map(int, details)):
-            names.append(detail['name'])
-
+    if selected_details is not None:
+        for detail in det_info: # выдача детаелй, которые были выбраны на фронте
+            if detail['id'] in list(map(int, selected_details)):
+                names.append(detail['name'])
+    
     '''
-        тут надо сделать проверку на пустоту списка деталей, должно быть выбрано что-то
-
-        нужно добавить выбор, на случай если не менялись блоки, и  добавить сообщение об ошибке
+        вычесть со склада детали
     '''
 
-    if item:
+    try:
         # Создание PDF-файла с использованием FPDF
 
         ''' Убрать этот блок в отдельный файлё '''
@@ -79,15 +96,17 @@ async def submit_report(request: Request, id: int = Form(...), description: str 
         pdf.add_font('DejaVuSans', '', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', uni=True)
         pdf.set_font("DejaVuSans", size=12)
         pdf.cell(200, 10, txt=f"Отчет для элемента с ID: {id}", ln=True)
-        pdf.cell(200, 10, txt=f"Название: {item['name']}", ln=True)
-        pdf.cell(200, 10, txt=f"Проблема: {item['problem']}", ln=True)
-        pdf.cell(200, 10, txt=f"Дата: {item['date']}", ln=True)
+        pdf.cell(200, 10, txt=f"Название: {name}", ln=True)
+        pdf.cell(200, 10, txt=f"Проблема: {problem}", ln=True)
+        pdf.cell(200, 10, txt=f"Дата: {date}", ln=True)
         pdf.cell(200, 10, txt=f"Дополнительное описание: {description}", ln=True)
         pdf.cell(200, 10, txt=f"Список деталей: {', '.join(names)}", ln=True)
 
         pdf.output(pdf_filename)
 
         # тут еще будет логика с сохранениемdetails данных о работе в таблицу
+    except Exception as e:
+        return {"message": "Невозможно создать файл!"}
 
     # Возврат PDF-файла пользователю
     return RedirectResponse("/files", status_code=303)
