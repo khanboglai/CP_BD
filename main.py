@@ -35,7 +35,7 @@ async def startup():
     """ Инициализация базы данных """
 
     logger.info("Start app")
-    await init_db()
+    # await init_db()
 
 
 @app.get("/", response_class=HTMLResponse)
