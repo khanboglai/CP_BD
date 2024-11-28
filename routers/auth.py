@@ -35,7 +35,11 @@ async def login(request: Request, login: str = Form(...), password: str = Form(.
         return templates.TemplateResponse("login.html", {"request": request, "error": "Пользователя с такими данными не существует"})
 
     request.session['user'] = login
-    request.session['id'] = status
+    request.session['id'] = status['id']
+    request.session['role'] = status['usr_role']
+
+    if status['usr_role'] == "admin":
+        return RedirectResponse(url="/admin", status_code=303)
     return RedirectResponse(url="/trouble_tickets", status_code=303)
 
 
@@ -80,6 +84,7 @@ async def register_user(
         email=email,
         login=login,
         hashed_password=hashed_password,
+        user_role="worker"
     )
 
     exist_user = await auth_user(login, hashed_password)

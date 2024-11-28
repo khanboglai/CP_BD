@@ -26,8 +26,8 @@ async def insert_user(user_data: dict):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """INSERT INTO users (name, surname, birth_date, age, email, login, hashed_password)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        query = """INSERT INTO users (name, surname, birth_date, age, email, login, hashed_password, usr_role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
         """
 
@@ -38,7 +38,8 @@ async def insert_user(user_data: dict):
             user_data['age'],
             user_data['email'],
             user_data['login'],
-            hash_password(user_data['hashed_password'])
+            hash_password(user_data['hashed_password']),
+            user_data['user_role']
         )
 
         user_id = await conn.fetchval(query, *values)
@@ -60,7 +61,7 @@ async def auth_user(login: str, password: str):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT id, hashed_password FROM users WHERE login = $1"""
+        query = """SELECT id, usr_role, hashed_password FROM users WHERE login = $1"""
         res = await conn.fetchrow(query, login)
 
         await conn.close()
@@ -70,7 +71,7 @@ async def auth_user(login: str, password: str):
 
         if bcrypt.checkpw(password.encode('utf-8'), res['hashed_password'].encode('utf-8')):
             logger.info("auth %s complete", login)
-            return res['id']  # Успешная аутентификация
+            return res  # Успешная аутентификация
         return False  # Неверный пароль
 
     except ConnectionError as e:

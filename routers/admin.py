@@ -3,8 +3,7 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from repositories.user import insert_user, auth_user
-from schemas.user import UserModel
+
 
 
 router = APIRouter()
@@ -12,11 +11,15 @@ router = APIRouter()
 templates = Jinja2Templates("templates")
 
 
-@round.get("/admin")
+@router.get("/admin", response_class=HTMLResponse)
 async def admin_root(request: Request):
     """ Страница админа """
-    '''
-        Тут еще очищение таблицы с документами
-        надо будет хранить в сессии роль, чтобы доступ был только у админа.
-    '''
+    
+    if 'user' not in request.session:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+
+    role = request.session.get('role')
+    if role != "admin":
+        return templates.TemplateResponse("login.html", {"request": request, "error": "У вас нет прав для посещения этой страницы"})
+    
     return templates.TemplateResponse("admin.html", {"request": request})

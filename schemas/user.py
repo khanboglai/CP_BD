@@ -15,6 +15,7 @@ class UserModel(BaseModel):
     email: EmailStr
     login: str
     hashed_password: str
+    user_role: str
 
     '''
         Валидация не обязательна, но желатьельна, для системного адина.

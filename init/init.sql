@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS users (
     age INT CHECK (age >= 0),
     email VARCHAR(100) UNIQUE,
     login VARCHAR(100) UNIQUE,
-    hashed_password VARCHAR(100)
+    hashed_password VARCHAR(100),
+    usr_role VARCHAR(100)
 );
-
 
 CREATE TABLE IF NOT EXISTS storage (
     id SERIAL PRIMARY KEY,
@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS storage (
     complex_name VARCHAR(200)
 );
 
-
 CREATE TABLE IF NOT EXISTS trouble_tickets (
     id SERIAL PRIMARY KEY,
     name VARCHAR(300),
@@ -25,7 +24,6 @@ CREATE TABLE IF NOT EXISTS trouble_tickets (
     date TIMESTAMP,
     status BOOLEAN
 );
-
 
 CREATE TABLE IF NOT EXISTS documents (
     id SERIAL PRIMARY KEY,
