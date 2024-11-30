@@ -15,11 +15,11 @@ async def insert_data(doc: Document):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """INSERT INTO documents (name, creation_date, author_id)
-        VALUES ($1, $2, $3)
+        query = """INSERT INTO documents (name, creation_date, file_path, author_id)
+        VALUES ($1, $2, $3, $4)
         RETURNING id"""
 
-        doc_id = await conn.fetchval(query, doc.name, doc.creation_date, doc.author_id)
+        doc_id = await conn.fetchval(query, doc.name, doc.creation_date, doc.file_path, doc.author_id)
         await conn.close()
         
         logger.info(f"Created row with id: {doc_id}")

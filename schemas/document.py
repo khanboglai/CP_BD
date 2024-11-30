@@ -9,4 +9,5 @@ class Document(BaseModel):
 
     name: str
     creation_date: datetime
+    file_path: str
     author_id: int

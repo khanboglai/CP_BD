@@ -76,3 +76,22 @@ async def auth_user(login: str, password: str):
 
     except ConnectionError as e:
         logger.error(e)
+
+
+async def get_users():
+    """ Функция возвращает всех пользователей """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """SELECT * FROM users"""
+
+        rows = await conn.fetch(query)
+        result = [dict(row) for row in rows]
+        await conn.close()
+
+        logger.info("Selected all users")
+        return result
+
+    except ConnectionError as e:
+        logger.error(e)

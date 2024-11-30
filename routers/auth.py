@@ -39,7 +39,7 @@ async def login(request: Request, login: str = Form(...), password: str = Form(.
     request.session['role'] = status['usr_role']
 
     if status['usr_role'] == "admin":
-        return RedirectResponse(url="/admin", status_code=303)
+        return RedirectResponse(url="/admin/users", status_code=303)
     return RedirectResponse(url="/trouble_tickets", status_code=303)
 
 

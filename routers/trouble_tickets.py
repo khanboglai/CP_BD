@@ -93,6 +93,7 @@ async def submit_report(request: Request,
         doc = Document(
             name=report_filename,
             creation_date=creation_time,
+            file_path=report_filename,
             author_id=request.session.get('id')
         )
 

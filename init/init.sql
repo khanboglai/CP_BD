@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS documents (
     id SERIAL PRIMARY KEY,
     name VARCHAR(300),
     creation_date TIMESTAMP,
+    file_path TEXT,
     author_id INT,
     FOREIGN KEY (author_id) REFERENCES users(id)
 );
