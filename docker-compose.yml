@@ -28,5 +28,18 @@ services:
     volumes:
       - .:/app
 
+  storage:
+    image: minio/minio
+    ports:
+      - "9000:9000"  # Порт для доступа к MinIO
+      - "9001:9001"  # Порт для веб-консоли
+    environment:
+      MINIO_ACCESS_KEY: file_server
+      MINIO_SECRET_KEY: file_server_secret
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data  # Хранение данных MinIO
+
 volumes:
   data:
+  minio_data:

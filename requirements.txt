@@ -14,3 +14,4 @@ itsdangerous==2.2.0
 email_validator==2.2.0
 python-multipart==0.0.16
 pytz==2024.2
+boto3==1.35.71
