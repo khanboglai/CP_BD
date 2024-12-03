@@ -9,7 +9,13 @@
 <body>
 
     <div class="container mt-5">
-        <h1 class="text-center">Список сотрудников</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="text-center">Список сотрудников</h1>
+            <div>
+                <a href="/storage" class="btn btn-secondary mr-2">Склад</a>
+                <a href="/admin/files" class="btn btn-secondary mr-2">Файлы</a>
+            </div>
+        </div>
 
         <table class="table table-bordered mt-4" id="employeeTable">
             <thead class="thead-dark">
@@ -34,7 +40,7 @@
         </table>
 
         <div class="text-center mt-4">
-            <a href="/register" class="btn btn-success">Добавить сотрудника</a>
+            <a href="/register/" class="btn btn-success">Добавить сотрудника</a>
             <button class="btn btn-info">Экспортировать данные</button>
         </div>
     </div>

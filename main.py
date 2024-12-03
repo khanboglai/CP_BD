@@ -3,7 +3,7 @@
 import logging
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from repositories.init_db import init_db
@@ -43,3 +43,16 @@ async def startup():
 async def read_root(request: Request):
     """ Отображение начальной страницы """
     return templates.TemplateResponse("welcome.html", {"request": request})
+
+
+# обработчик для не существующего маршрута
+@app.get("/{full_path:path}")
+async def catch_all(full_path: str):
+    return RedirectResponse(url="/") # перенаправление на главную
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    if exc.status_code == 404:
+        return templates.TemplateResponse("errors/404.html", {"request": request, "error": exc.detail})
+    return HTMLResponse(content="Internal Server Error", status_code=500)

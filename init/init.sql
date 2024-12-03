@@ -3,7 +3,6 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(100),
     surname VARCHAR(100),
     birth_date TIMESTAMP,
-    age INT CHECK (age >= 0),
     email VARCHAR(100) UNIQUE,
     login VARCHAR(100) UNIQUE,
     hashed_password VARCHAR(100),

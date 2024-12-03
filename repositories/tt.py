@@ -101,3 +101,25 @@ async def update_get_detail(id: int):
         return complex_name
     except ConnectionError as e:
         logger.error(e)
+
+
+async def cancel_update(id: int):
+    """ Функция для обновления статуса и выдачи строки из таблицы """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """UPDATE trouble_tickets
+        SET status=false
+        WHERE id = $1
+        RETURNING id
+        """
+    
+        row = await conn.fetchrow(query, id)
+
+        await conn.close()
+
+        logger.info("Cancel updating")
+        return row
+    except ConnectionError as e:
+        logger.error(e)

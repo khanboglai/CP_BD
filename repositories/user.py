@@ -26,8 +26,8 @@ async def insert_user(user_data: dict):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """INSERT INTO users (name, surname, birth_date, age, email, login, hashed_password, usr_role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        query = """INSERT INTO users (name, surname, birth_date, email, login, hashed_password, usr_role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
         """
 
@@ -35,7 +35,6 @@ async def insert_user(user_data: dict):
             user_data['name'],
             user_data['surname'],
             user_data['birth_date'],
-            user_data['age'],
             user_data['email'],
             user_data['login'],
             hash_password(user_data['hashed_password']),

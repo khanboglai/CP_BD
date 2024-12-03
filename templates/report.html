@@ -27,6 +27,12 @@
 </head>
 <body>
     <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <a href="/trouble_tickets?id={{ item.id }}" class="btn btn-secondary mr-2">Назад</a>
+            </div>
+        </div>
+
         <h1>Отчет для {{ item.name }}</h1>
         <p>ID: {{ item.id }}</p>
         <p>Проблема: {{ item.problem }}</p>

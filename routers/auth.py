@@ -66,7 +66,6 @@ async def register_user(
     name: str = Form(...),
     surname: str = Form(...),
     birth_date: str = Form(...),
-    age: int = Form(...),
     email: str = Form(...),
     login: str = Form(...),
     hashed_password: str = Form(...),
@@ -80,7 +79,6 @@ async def register_user(
         name=name,
         surname=surname,
         birth_date=birth_date,
-        age=age,
         email=email,
         login=login,
         hashed_password=hashed_password,
@@ -97,7 +95,6 @@ async def register_user(
             "name": name,
             "surname": surname,
             "birth_date": birth_date.strftime("%Y-%m-%d"),
-            "age": age,
             "email": email,
             "login": login,
         }
@@ -113,7 +110,6 @@ async def register_user(
             "name": name,
             "surname": surname,
             "birth_date": birth_date.strftime("%Y-%m-%d"),
-            "age": age,
             "email": email,
             "login": login,
         }

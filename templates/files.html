@@ -9,11 +9,16 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Список PDF-файлов</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="mb-4">Список PDF-файлов</h1>
+            <div>
+                <a href="/trouble_tickets" class="btn btn-secondary mr-2">Заявки</a>
+            </div>
+        </div>
         <ul class="list-group">
             {% for pdf in pdf_files %}
                 <li class="list-group-item">
-                    <a href="/pdfs/{{ pdf }}" class="btn btn-primary">{{ pdf }}</a>
+                    <a href="/pdfs/{{ pdf }}" target="_blank" class="btn btn-primary">{{ pdf }}</a>
                 </li>
             {% endfor %}
         </ul>

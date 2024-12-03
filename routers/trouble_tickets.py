@@ -2,6 +2,7 @@
 
 import os
 import pytz
+import logging
 from datetime import datetime
 from urllib.parse import quote
 import uuid
@@ -10,8 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import boto3
 
-
-from repositories.tt import get_data, update_get_row, get_details, update_get_detail
+from repositories.tt import get_data, update_get_row, get_details, update_get_detail, cancel_update
 from repositories.document import insert_data
 from schemas.document import Document
 from pdf_generator import create_pdf
@@ -19,6 +19,10 @@ from pdf_generator import create_pdf
 templates = Jinja2Templates(directory="templates")
 
 router = APIRouter()
+
+# logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 ## тестово
@@ -33,14 +37,18 @@ BUCKET_NAME = 'storage-mvs'
 try:
     s3_client.create_bucket(Bucket=BUCKET_NAME)
 except Exception as e:
-    print(f"Exception: {e}")
+    logger.warning(f"S3: {e}")
+
 
 @router.get("/trouble_tickets", response_class=HTMLResponse)
-async def read_table(request: Request):
+async def read_table(request: Request, id: int = None):
     """ отображение данных на странице """
 
     if 'user' not in request.session:
         return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
+    
+    if id is not None:
+        await cancel_update(id)
 
     items = await get_data()
     if items is not None:
@@ -74,6 +82,10 @@ async def submit_report(request: Request,
                         selected_details: list = Form(None)):
     """ Создание отчета """
 
+    if 'user' not in request.session:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
+
+
     item_data = {
         "id": id,
         "name": name,
@@ -85,10 +97,9 @@ async def submit_report(request: Request,
         details = await get_details(name)
         return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Выберите что-то из списка."})
 
-
-    if 'user' not in request.session:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
-    
+    if len(description) == 0:
+        details = await get_details(name)
+        return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Добавьте описание работы!"})
 
     user = request.session['user']
 
@@ -116,7 +127,9 @@ async def submit_report(request: Request,
 
         await insert_data(doc)
 
-        # тут еще будет логика с сохранениемdetails данных о работе в таблицу
+        os.remove(report_filename)
+
+        logger.info("Created report")
     except Exception as e:
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail="Произошла ошибка при создании отчета.")
@@ -137,11 +150,11 @@ async def read_root(request: Request):
         pdf_files = []
         response = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=f"{user}/")
         for obj in response.get('Contents', []):
-            print(obj['Key'])
+            # print(obj['Key'])
             if obj['Key'].endswith('.pdf'):
                 pdf_files.append(obj['Key'])
 
-        print(pdf_files)
+        # print(pdf_files)
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Credentials not available: {e}")
 
@@ -155,6 +168,6 @@ async def get_pdf(pdf_name: str, request: Request):
         # Получаем файл из MinIO
         user = request.session.get('user')
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{user}/{pdf_path}")
-        return StreamingResponse(response['Body'], media_type='application/pdf', headers={"Content-Disposition": f"attachment; filename={pdf_name}"})
+        return StreamingResponse(response['Body'], media_type='application/pdf', headers={"Content-Disposition": f"inline; filename={pdf_name}"})
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"File not found {e}")
