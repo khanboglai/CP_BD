@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="text-center">Личный кабинет</h1>
+            <div>
+                <a href="/trouble_tickets" class="btn btn-secondary mr-2">Заявки</a>
+                <a href="/files" class="btn btn-secondary mr-2">Файлы</a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                Привет, {{ user.name }} {{ user.surname }}!
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Ваши данные</h5>
+                <p class="card-text">Login: {{ user.login }}</p>
+                <p class="card-text">Email: {{ user.email }}</p>
+                <p class="card-text">Возраст: {{ user.age }}</p>
+                <p class="card-text">Дата рождения: {{ user.birth_date }}</p>
+                <p class="card-text">Ваша статичтика: n отчетов</p>
+                <a href="/logout" class="btn btn-danger">Выйти</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

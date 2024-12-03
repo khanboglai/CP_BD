@@ -94,3 +94,22 @@ async def get_users():
 
     except ConnectionError as e:
         logger.error(e)
+
+
+async def get_user(login: str):
+    """ Функция возвращает пользователя """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """SELECT *, DATE_PART('year', AGE(current_date, birth_date))::INTEGER AS age FROM users WHERE login=$1"""
+
+        row = await conn.fetchrow(query, login)
+        await conn.close()
+
+        logger.info(f"Selected user with login {login}")
+        return row
+
+    except ConnectionError as e:
+        logger.error(e)
+

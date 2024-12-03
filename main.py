@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 from repositories.init_db import init_db
 
-from routers import auth, storage, trouble_tickets, admin
+from routers import auth, storage, trouble_tickets, admin, lk
 
 
 # инициализация приложения
@@ -19,6 +19,7 @@ app.include_router(auth.router, tags=["auth"])
 app.include_router(storage.router, tags=["storage"])
 app.include_router(trouble_tickets.router, tags=["tt"])
 app.include_router(admin.router, tags=['admin'])
+app.include_router(lk.router, tags=['lk'])
 
 templates = Jinja2Templates(directory="templates")
 
