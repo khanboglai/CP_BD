@@ -17,37 +17,34 @@
 
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1 class="text-center">Список сотрудников</h1>
+            <h1 class="text-center">Список комплексов</h1>
             <div>
                 <a href="/storage" class="btn btn-secondary mr-2">Склад</a>
                 <a href="/admin/files" class="btn btn-secondary mr-2">Файлы</a>
-                <a href="/complexes" class="btn btn-secondary mr-2">Комплексы</a>
-                <a href="/logout" class="btn btn-danger">Выйти</a>
+                <a href="/admin/users" class="btn btn-secondary mr-2">Пользователи</a>
             </div>
         </div>
 
         <table class="table table-bordered mt-4" id="employeeTable">
             <thead class="thead-dark">
                 <tr>
-                    <th>Имя</th>
-                    <th>Почта</th>
-                    <th>Возраст</th>
-                    <th>Дата рождения</th>
-                    <th>Роль</th>
+                    <th>ИСН</th>
+                    <th>Название</th>
+                    <th>Серийный номер</th>
+                    <th>Дата производства</th>
                     <th>Действия</th>
                 </tr>
             </thead>
             <tbody>
-                {% for employee in employees %}
+                {% for complex in complexes %}
                 <tr>
-                    <td>{{ employee.name }}</td>
-                    <td>{{ employee.email }}</td>
-                    <td>{{ employee.age }}</td>
-                    <td>{{ employee.birth_date }}</td>
-                    <td>{{ employee.usr_role }}</td>
+                    <td>{{ complex.ИСН }}</td>
+                    <td>{{ complex.name }}</td>
+                    <td>{{ complex.factory_id }}</td>
+                    <td>{{ complex.creation_date }}</td>
                     <td>
-                        <button class="btn btn-warning">Редактировать</button>
-                        <form action="/delete/{{ employee.login }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
+                        <!-- <button class="btn btn-warning">Редактировать</button> -->
+                        <form action="/del/{{ complex.ИСН }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="submit" class="btn btn-danger">Удалить</button>
                         </form>
@@ -58,7 +55,7 @@
         </table>
 
         <div class="text-center mt-4">
-            <a href="/register/" class="btn btn-success">Добавить сотрудника</a>
+            <a href="/add_complex" class="btn btn-success">Добавить комплекс</a>
             <button class="btn btn-info">Экспортировать данные</button>
         </div>
     </div>

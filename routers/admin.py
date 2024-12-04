@@ -2,6 +2,7 @@
 
 import os
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
@@ -9,7 +10,10 @@ from fastapi.templating import Jinja2Templates
 import boto3
 
 from repositories.user import get_users, delete_user
+from repositories.complex import get_complexes, del_complex, check_complex, insert_complex_data
 from repositories.files import get_files
+
+from schemas.complex import ComplexModel
 
 router = APIRouter()
 
@@ -103,3 +107,67 @@ async def delete_usr(request: Request, login: str):
     if st:
         return RedirectResponse(url="/admin/users", status_code=303)
     raise HTTPException(status_code=404, detail="Проблемы с БД")
+
+
+@router.get("/complexes", response_class=HTMLResponse)
+async def show_complexes(request: Request):
+    """ Функция для отображения комплексов """
+
+    user = request.session.get('user')
+    if not user:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+
+    data = await get_complexes()
+    if data:
+        return templates.TemplateResponse("complexes.html", {"request": request, "complexes": data})
+    raise HTTPException(status_code=404, detail="Доделать надо чтобы перенаправляло")
+
+
+@router.post("/del/{id}")
+async def delete_complex(request: Request, id: int):
+    user = request.session.get('user')
+    if not user:
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+    
+    st = await del_complex(id)
+    if st:
+        return RedirectResponse(url="/complexes", status_code=303)
+    raise HTTPException(status_code=404, detail="Проблемы с БД")
+
+
+@router.get("/add_complex", response_class=HTMLResponse)
+async def send_form_complex(request: Request):
+    """ Функция для отображения формы для добавления комплекса """
+
+    return templates.TemplateResponse("insert_complex.html", {"request": request, "error": None, "form_data": {}})
+
+
+@router.post("/add_complex")
+async def insert_complex(request: Request,
+                        ИСН: int = Form(...),
+                        name: str = Form(...),
+                        factory_id: int = Form(...),
+                        creation_date: str = Form(...)):
+    """ Добавленик комплекса в базу """
+
+    creation_date = datetime.strptime(creation_date, "%Y-%m-%d")
+
+    complex_data = ComplexModel(
+        ISN=ИСН,
+        name=name,
+        factory_id=factory_id,
+        creation_date=creation_date
+    )
+
+    check = await check_complex(ИСН)
+    if check:
+        return templates.TemplateResponse("insert_complex.html", {"request": request, "error": "Коплекс с таким ИСН уже существует", "form_data": complex_data})
+    
+    res = await insert_complex_data(complex_data)
+    if res:
+        return RedirectResponse(url="/complexes", status_code=303)
+    return templates.TemplateResponse("insert_complex.html", {
+        "request": request,
+        "error": "Проверьте данные",
+        "form_data": complex_data
+    })

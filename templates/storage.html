@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Склад</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function confirmDelete(event) {
+            if (!confirm("Вы уверены, что хотите удалить этого сотрудника?")) {
+                event.preventDefault(); // Отменяем отправку формы, если пользователь нажал "Отмена"
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -23,6 +30,7 @@
                 <th>Название</th>
                 <th>Количество</th>
                 <th>Комплекс</th>
+                <th>Действие</th>
             </tr>
         </thead>
         <tbody>
@@ -37,6 +45,12 @@
                     </form>
                 </td>
                 <td>{{ item.complex_name }}</td>
+                <td>
+                    <form action="/deletedetail/{{ item.id }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
+                        <input type="hidden" name="_method" value="DELETE">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

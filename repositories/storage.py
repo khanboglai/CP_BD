@@ -80,3 +80,19 @@ async def update_data(id: int, count: int):
 
     except ConnectionError as e:
         logger.error(e)
+
+
+async def delete_data(id: int):
+    """ Функция для удаления записи из стаблицы склада """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        query = """DELETE FROM storage WHERE id=$1"""
+
+        res = await conn.execute(query, id)
+        await conn.close()
+
+        logger.info(f"Deleted detail: {id} from storage")
+        return res
+    except asyncpg.PostgresError as e:
+        logger.error(e)

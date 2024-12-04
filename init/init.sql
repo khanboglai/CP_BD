@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS complexes (
     ИСН SERIAL PRIMARY KEY,
     name VARCHAR(300),
-    factory_id INT,
+    factory_id SERIAL,
     creation_date TIMESTAMP
 );
 
