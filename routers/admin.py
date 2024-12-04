@@ -94,6 +94,10 @@ async def download_file(filename: str, request: Request):
 @router.post("/delete/{login}")
 async def delete_usr(request: Request, login: str):
     """ Функция для удаления пользователя """
+
+    user = request.session.get('user')
+    if user == login:
+        return templates.TemplateResponse("midlle_delet.html", {"request": request})
     
     st = await delete_user(login)
     if st:
