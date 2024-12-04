@@ -96,3 +96,19 @@ async def delete_data(id: int):
         return res
     except asyncpg.PostgresError as e:
         logger.error(e)
+
+
+async def get_row(complex_name: str):
+    """ Функция для выдачи строки """
+
+    try:
+        conn  = await asyncpg.connect(DATABASE_URL)
+        query = """SELECT * FROM storage WHERE complex_name=$1"""
+
+        res = await conn.fetchrow(query, complex_name)
+
+        await conn.close()
+
+        return res
+    except asyncpg.PostgresError as e:
+        logger.error(e)

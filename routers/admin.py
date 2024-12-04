@@ -12,6 +12,7 @@ import boto3
 from repositories.user import get_users, delete_user
 from repositories.complex import get_complexes, del_complex, check_complex, insert_complex_data
 from repositories.files import get_files
+from repositories.works import get_data
 
 from schemas.complex import ComplexModel
 
@@ -171,3 +172,12 @@ async def insert_complex(request: Request,
         "error": "Проверьте данные",
         "form_data": complex_data
     })
+
+
+@router.get("/works", response_class=HTMLResponse)
+async def show_works(request: Request):
+    """ Функция для отображения работ """
+
+    data = await get_data()
+
+    return templates.TemplateResponse("works.html", {"request": request, "items": data})

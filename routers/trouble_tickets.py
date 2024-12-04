@@ -14,6 +14,7 @@ import boto3
 from repositories.tt import get_data, update_get_row, get_details, update_get_detail, cancel_update
 from repositories.document import insert_data
 from repositories.complex import get_complex
+from repositories.works import insert_row
 from schemas.document import Document
 from pdf_generator import create_pdf
 
@@ -108,6 +109,7 @@ async def submit_report(request: Request,
 
     user = request.session['user']
 
+
     names = []
     if selected_details is not None:
         selected_details = list(map(int, selected_details))
@@ -122,6 +124,16 @@ async def submit_report(request: Request,
         create_pdf(report_filename, item_data, description, names)
 
         s3_client.upload_file(report_filename, BUCKET_NAME, f"{user}/" + report_filename)
+
+        work = {
+            "worker_login": user,
+            "ИСН": complex_id,
+            "finisd_date": creation_time.astimezone(pytz.utc).replace(tzinfo=None),
+            "description": description,
+            "tt_id": id,
+        }
+
+        await insert_row(work)
 
         doc = Document(
             name=report_filename,

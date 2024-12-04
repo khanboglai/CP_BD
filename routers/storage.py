@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from repositories.storage import insert_data, get_data, update_data, delete_data
+from repositories.storage import insert_data, get_data, update_data, delete_data, get_row
 from schemas.component import Component
 
 
@@ -44,6 +44,10 @@ async def storage_insert(
         count=count,
         complex_name=complex_name
     )
+
+    check = await get_row(complex_name)
+    if check is None:
+        return templates.TemplateResponse("insert_complex.html", {"request": request, "error": "Добавьте комплекс в базу и вернитесь для повторной отправки данных", "form_data": {}})
 
     st = await insert_data(storage_data.model_dump())
     if st:
