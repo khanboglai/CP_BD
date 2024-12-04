@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import boto3
 
-from repositories.user import get_users
+from repositories.user import get_users, delete_user
 from repositories.files import get_files
 
 router = APIRouter()
@@ -58,10 +58,8 @@ async def admin_files(request: Request):
     # check users
 
     files = await get_files()
-    if files:
-        return templates.TemplateResponse("doc.html", {"request": request, "files": files})
-    content = {"message": "Something went wrong"}
-    return content
+
+    return templates.TemplateResponse("doc.html", {"request": request, "files": files})
 
 
 @router.get("/admin/{filename}")
@@ -91,3 +89,13 @@ async def download_file(filename: str, request: Request):
         raise HTTPException(status_code=404, detail="File not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving file: {e}")
+
+
+@router.post("/delete/{login}")
+async def delete_usr(request: Request, login: str):
+    """ Функция для удаления пользователя """
+    
+    st = await delete_user(login)
+    if st:
+        return RedirectResponse(url="/admin/users", status_code=303)
+    raise HTTPException(status_code=404, detail="Проблемы с БД")

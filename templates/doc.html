@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список файлов</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        window.onload = function() {
+            // Проверяем наличие файлов
+            const files = {{ files|length }}; // Получаем количество файлов из шаблона
+
+            if (files === 0) {
+                alert("Файлы отсутствуют. Вы будете перенаправлены обратно через 3 секунды.");
+                setTimeout(() => {
+                    window.location.href = "/admin/users"; // Замените на нужный URL
+                }, 3000);
+            }
+        };
+    </script>
 </head>
 <body>
 

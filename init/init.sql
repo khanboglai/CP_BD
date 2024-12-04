@@ -30,5 +30,5 @@ CREATE TABLE IF NOT EXISTS documents (
     creation_date TIMESTAMP,
     file_path TEXT,
     author_id INT,
-    FOREIGN KEY (author_id) REFERENCES users(id)
+    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL
 );

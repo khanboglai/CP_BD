@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Административная панель</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function confirmDelete(event) {
+            if (!confirm("Вы уверены, что хотите удалить этого сотрудника?")) {
+                event.preventDefault(); // Отменяем отправку формы, если пользователь нажал "Отмена"
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -21,6 +28,9 @@
             <thead class="thead-dark">
                 <tr>
                     <th>Имя</th>
+                    <th>Почта</th>
+                    <th>Возраст</th>
+                    <th>Дата рождения</th>
                     <th>Роль</th>
                     <th>Действия</th>
                 </tr>
@@ -29,10 +39,16 @@
                 {% for employee in employees %}
                 <tr>
                     <td>{{ employee.name }}</td>
+                    <td>{{ employee.email }}</td>
+                    <td>{{ employee.age }}</td>
+                    <td>{{ employee.birth_date }}</td>
                     <td>{{ employee.usr_role }}</td>
                     <td>
                         <button class="btn btn-warning">Редактировать</button>
-                        <button class="btn btn-danger">Удалить</button>
+                        <form action="/delete/{{ employee.login }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-danger">Удалить</button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

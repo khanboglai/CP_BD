@@ -83,7 +83,7 @@ async def get_users():
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT * FROM users"""
+        query = """SELECT *, DATE_PART('year', AGE(current_date, birth_date))::INTEGER AS age FROM users"""
 
         rows = await conn.fetch(query)
         result = [dict(row) for row in rows]
@@ -113,3 +113,20 @@ async def get_user(login: str):
     except ConnectionError as e:
         logger.error(e)
 
+
+async def delete_user(login: str):
+    """ Функция возвращает пользователя """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """DELETE FROM users WHERE login=$1"""
+
+        status = await conn.execute(query, login)
+        await conn.close()
+
+        logger.info(f"Deleted user with login {login}")
+        return status
+
+    except asyncpg.PostgresError as e:
+        logger.error(e)

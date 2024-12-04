@@ -102,7 +102,7 @@ async def register_user(
 
     user_id = await insert_user(user_data.model_dump())  # Вставка пользователя в БД
     if user_id is not None:
-        return RedirectResponse(url="/login", status_code=303)  
+        return RedirectResponse(url="/admin/users", status_code=303)  
     return templates.TemplateResponse("register.html", {
         "request": request,
         "error": "Проверьте данные",
