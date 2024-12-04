@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <h1>Отчет для {{ item.name }}</h1>
+        <h1>Отчет для {{ item.ИСН }}</h1>
         <p>ID: {{ item.id }}</p>
         <p>Проблема: {{ item.problem }}</p>
         <p>Дата: {{ item.date }}</p>
@@ -46,7 +46,7 @@
 
         <form action="/submit_report" method="post">
             <input type="hidden" name="id" value="{{ item.id }}">
-            <input type="hidden" name="name" value="{{ item.name }}">
+            <input type="hidden" name="complex_id" value="{{ item.ИСН }}">
             <input type="hidden" name="problem" value="{{ item.problem }}">
             <input type="hidden" name="date" value="{{ item.date }}">
             <div class="form-group">

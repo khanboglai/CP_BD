@@ -9,19 +9,28 @@ CREATE TABLE IF NOT EXISTS users (
     usr_role VARCHAR(100)
 );
 
+CREATE TABLE IF NOT EXISTS complexes (
+    ИСН SERIAL PRIMARY KEY,
+    name VARCHAR(300),
+    factory_id INT,
+    creation_date TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS storage (
     id SERIAL PRIMARY KEY,
     name VARCHAR(300),
     count INT,
-    complex_name VARCHAR(200)
+    complex_name VARCHAR(300)
 );
 
 CREATE TABLE IF NOT EXISTS trouble_tickets (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(300),
+    ИСН SERIAL,
+    name VARCHAR(300)
     problem VARCHAR(1000),
     date TIMESTAMP,
-    status BOOLEAN
+    status BOOLEAN,
+    FOREIGN KEY (ИСН) REFERENCES complexes(ИСН) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS documents (

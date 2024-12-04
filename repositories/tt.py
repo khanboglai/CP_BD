@@ -35,7 +35,7 @@ async def update_get_row(id: int):
         query = """UPDATE trouble_tickets
         SET status=true
         WHERE id = $1
-        RETURNING id, name, problem, date
+        RETURNING id, ИСН, problem, date
         """
     
         row = await conn.fetchrow(query, id)

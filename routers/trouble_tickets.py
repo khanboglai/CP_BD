@@ -13,6 +13,7 @@ import boto3
 
 from repositories.tt import get_data, update_get_row, get_details, update_get_detail, cancel_update
 from repositories.document import insert_data
+from repositories.complex import get_complex
 from schemas.document import Document
 from pdf_generator import create_pdf
 
@@ -64,7 +65,8 @@ async def create_report(request: Request, item_id: int = Form(...)):
         raise HTTPException(status_code=403, detail="Not authenticated")
     
     item = await update_get_row(item_id)
-    details = await get_details(item['name'])
+    complex_item = await get_complex(item['ИСН'])
+    details = await get_details(complex_item['name'])
 
     if item and details:
         return templates.TemplateResponse("report.html", {"request": request, "item": item, "details": details, "error": None})
@@ -74,7 +76,7 @@ async def create_report(request: Request, item_id: int = Form(...)):
 @router.post("/submit_report")
 async def submit_report(request: Request, 
                         id: int = Form(...), 
-                        name: str = Form(...),
+                        complex_id: int = Form(...),
                         problem: str = Form(...),
                         date: str = Form(...),
                         description: str = Form(...), 
@@ -88,17 +90,20 @@ async def submit_report(request: Request,
 
     item_data = {
         "id": id,
-        "name": name,
+        "ИСН": complex_id,
         "problem": problem,
         "date": date
     }
 
+    complex_info = await get_complex(complex_id)
+    logger.info(f"Comlex info: {complex_info}")
+
     if selected_details is None and no_details is None:
-        details = await get_details(name)
+        details = await get_details(complex_info['name'])
         return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Выберите что-то из списка."})
 
     if len(description) == 0:
-        details = await get_details(name)
+        details = await get_details(complex_info['name'])
         return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Добавьте описание работы!"})
 
     user = request.session['user']
@@ -112,7 +117,7 @@ async def submit_report(request: Request,
 
     try:
         timezone = pytz.timezone('Europe/Moscow')
-        creation_time = datetime.now() # Разобраться с локализацией времени, проблема с БД``
+        creation_time = datetime.now(timezone) # Разобраться с локализацией времени, проблема с БД``
         report_filename = f"report_{uuid.uuid4()}_{item_data['id']}_{creation_time}_{user}.pdf"
         create_pdf(report_filename, item_data, description, names)
 
@@ -131,7 +136,7 @@ async def submit_report(request: Request,
 
         logger.info("Created report")
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error with report creations: {e}")
         raise HTTPException(status_code=500, detail="Произошла ошибка при создании отчета.")
 
     # Возврат PDF-файла пользователю

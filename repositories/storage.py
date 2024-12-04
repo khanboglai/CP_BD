@@ -75,6 +75,7 @@ async def update_data(id: int, count: int):
         component_id = await conn.fetchval(query, *values)
 
         await conn.close()
+        logger.info(f"Details for {component_id} updated!")
         return component_id
 
     except ConnectionError as e:
