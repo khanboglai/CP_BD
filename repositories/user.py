@@ -62,7 +62,7 @@ async def auth_user(login: str, password: str):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT id, usr_role, hashed_password FROM users WHERE login = $1"""
+        query = """SELECT * FROM auth_view WHERE login = $1"""
         res = await conn.fetchrow(query, login)
 
         await conn.close()
@@ -85,7 +85,7 @@ async def get_users():
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT *, DATE_PART('year', AGE(current_date, birth_date))::INTEGER AS age FROM users"""
+        query = """SELECT * FROM user_with_age"""
 
         rows = await conn.fetch(query)
         result = [dict(row) for row in rows]
@@ -104,7 +104,7 @@ async def get_user(login: str):
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT *, DATE_PART('year', AGE(current_date, birth_date))::INTEGER AS age FROM users WHERE login=$1"""
+        query = """SELECT * FROM user_with_age WHERE login = $1"""
 
         row = await conn.fetchrow(query, login)
         await conn.close()

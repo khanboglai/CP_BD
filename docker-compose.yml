@@ -26,7 +26,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: "postgresql://postgres:postgres@db:5432/service_center"
+      DATABASE_URL: "postgresql://worker1:worker@db:5432/service_center"
     volumes:
       - .:/app
 

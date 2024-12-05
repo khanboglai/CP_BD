@@ -15,7 +15,7 @@ async def get_analitic():
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT worker_login, activity_count FROM user_activity_log"""
+        query = """SELECT * FROM analitic_view"""
 
         rows = await conn.fetch(query)
         await conn.close()
