@@ -47,7 +47,7 @@
                     <td>{{ employee.birth_date }}</td>
                     <td>{{ employee.usr_role }}</td>
                     <td>
-                        <button class="btn btn-warning">Редактировать</button>
+                        <a href="/edit_user/{{ employee.login }}" class="btn btn-warning">Редактировать</a>
                         <form action="/delete/{{ employee.login }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="submit" class="btn btn-danger">Удалить</button>

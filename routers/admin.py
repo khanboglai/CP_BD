@@ -9,12 +9,13 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import boto3
 
-from repositories.user import get_users, delete_user
+from repositories.user import get_users, delete_user, get_user, update_usr
 from repositories.complex import *
 from repositories.files import get_files
 from repositories.works import get_data
 
 from schemas.complex import ComplexModel, UpdateComplexModel
+from schemas.user import UpdateUserModel
 
 router = APIRouter()
 
@@ -184,7 +185,7 @@ async def show_works(request: Request):
 
 
 @router.get("/edit_complex/{id}", response_class=HTMLResponse)
-async def show_edit_page(request: Request, id: int):
+async def show_edit_page_complex(request: Request, id: int):
     """ Функция для отображения страницы редактирования комплекса """
 
     complex_data = await get_complex(id)
@@ -210,5 +211,30 @@ async def update_complex(request: Request, id: int, name: str = Form(...), facto
     res = await update_row(id, data)
     if res:
         return RedirectResponse(url="/complexes", status_code=303)
+    
+    raise HTTPException(status_code=404, detail="Проблема с обновлением данных!")
+
+
+@router.get("/edit_user/{login}", response_class=HTMLResponse)
+async def show_edit_page_user(request: Request, login: str):
+    """ Функция для отображения страницы редактирования комплекса """
+
+    user_data = await get_user(login)
+    if not user_data:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return templates.TemplateResponse("edit_users.html", {"request": request, "user": user_data, "user_id": id})
+
+
+@router.post("/update_user/{id}")
+async def update_user(request: Request, id: int, data: UpdateUserModel = Form(...)):
+    """ Функция для обновления данных комплекса """
+
+    # if complex_id not in complexes:
+    #     raise HTTPException(status_code=404, detail="Complex not found")
+
+    res = await update_usr(id, data)
+    if res:
+        return RedirectResponse(url="/admin/users", status_code=303)
     
     raise HTTPException(status_code=404, detail="Проблема с обновлением данных!")

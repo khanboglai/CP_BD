@@ -5,6 +5,8 @@ import asyncpg
 import bcrypt
 from config import DATABASE_URL
 
+from schemas.user import UpdateUserModel
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -128,5 +130,32 @@ async def delete_user(login: str):
         logger.info(f"Deleted user with login {login}")
         return status
 
+    except asyncpg.PostgresError as e:
+        logger.error(e)
+
+
+async def update_usr(id: int, user_data: UpdateUserModel):
+    """ Функция для обновления данных пользователя """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        query = """UPDATE users
+        SET name=$2, surname=$3, birth_date=$4, email=$5, login=$6, hashed_password=$7
+        WHERE id=$1
+        RETURNING id
+        """
+
+        res = await conn.fetchval(query, id, 
+                                user_data.name, 
+                                user_data.surname, 
+                                user_data.birth_date, 
+                                user_data.email,
+                                user_data.login,
+                                user_data.hashed_password)
+        
+        await conn.close()
+
+        logger.info(f"Updated user with id: {id}")
+        return res
     except asyncpg.PostgresError as e:
         logger.error(e)
