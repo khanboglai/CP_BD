@@ -13,6 +13,7 @@ from repositories.user import get_users, delete_user, get_user, update_usr
 from repositories.complex import *
 from repositories.files import get_files
 from repositories.works import get_data
+from repositories.analitic import get_analitic
 
 from schemas.complex import ComplexModel, UpdateComplexModel
 from schemas.user import UpdateUserModel
@@ -238,3 +239,11 @@ async def update_user(request: Request, id: int, data: UpdateUserModel = Form(..
         return RedirectResponse(url="/admin/users", status_code=303)
     
     raise HTTPException(status_code=404, detail="Проблема с обновлением данных!")
+
+
+@router.get("/analitic", response_class=HTMLResponse)
+async def show_analitic(request: Request):
+    """ Функция для отображения аналитики """
+
+    res = await get_analitic()
+    return templates.TemplateResponse("analitic.html", {"request": request, "data": res})

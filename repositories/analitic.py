@@ -1,4 +1,4 @@
-""" Функции для работы с таблицей файлов """
+""" Функции для работы с таблицей аналитики """
 
 import logging
 import asyncpg
@@ -9,19 +9,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def get_files():
-    """ получить все файлы из таблицы """
+async def get_analitic():
+    """ получить все записи """
 
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT * FROM documents"""
+        query = """SELECT worker_login, activity_count FROM user_activity_log"""
 
         rows = await conn.fetch(query)
         await conn.close()
 
         result = [dict(row) for row in rows]
-        logger.info("Selected all files from documents")
+        logger.info("Selected all files from user_activity_log")
         return result
     except ConnectionError as e:
         logger.error(e)

@@ -151,7 +151,7 @@ async def update_usr(id: int, user_data: UpdateUserModel):
                                 user_data.birth_date, 
                                 user_data.email,
                                 user_data.login,
-                                user_data.hashed_password)
+                                hash_password(user_data.hashed_password))
         
         await conn.close()
 

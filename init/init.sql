@@ -54,3 +54,62 @@ CREATE TABLE IF NOT EXISTS works (
     CONSTRAINT fk_ISN FOREIGN KEY (ИСН) REFERENCES complexes(ИСН) ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT fk_tt_id FOREIGN KEY (tt_id) REFERENCES trouble_tickets(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
+
+-- тут триггер для логгирования заявок
+
+CREATE TABLE ticket_logs (
+    id SERIAL PRIMARY KEY,
+    ticket_id SERIAL,
+    old_status BOOLEAN,
+    new_status BOOLEAN,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE OR REPLACE FUNCTION log_ticket_changes()
+RETURNS TRIGGER AS $func$
+BEGIN
+    INSERT INTO ticket_logs (ticket_id, old_status, new_status)
+    VALUES (OLD.id, OLD.status, NEW.status);
+    RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_log_ticket_changes
+AFTER UPDATE ON trouble_tickets
+FOR EACH ROW
+EXECUTE FUNCTION log_ticket_changes();
+
+-- тут триггер для ведения анализа успеваемости
+
+CREATE TABLE IF NOT EXISTS user_activity_log (
+    id SERIAL PRIMARY KEY,
+    worker_login VARCHAR(100),
+    activity_count INT DEFAULT 0,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (worker_login)
+);
+
+CREATE OR REPLACE FUNCTION log_user_activity()
+RETURNS TRIGGER AS $func$
+BEGIN
+    -- Проверяем, существует ли запись для данного worker_login
+    IF EXISTS (SELECT 1 FROM user_activity_log WHERE worker_login = NEW.worker_login) THEN
+        -- Если существует, увеличиваем счетчик
+        UPDATE user_activity_log
+        SET activity_count = activity_count + 1,
+            last_activity = CURRENT_TIMESTAMP
+        WHERE worker_login = NEW.worker_login;
+    ELSE
+        -- Если не существует, создаем новую запись
+        INSERT INTO user_activity_log (worker_login, activity_count)
+        VALUES (NEW.worker_login, 1);
+    END IF;
+
+    RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
+
+CREATE TRIGGER after_insert_works
+AFTER INSERT ON works
+FOR EACH ROW
+EXECUTE FUNCTION log_user_activity();

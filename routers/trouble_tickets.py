@@ -137,7 +137,7 @@ async def submit_report(request: Request,
 
         doc = Document(
             name=report_filename,
-            creation_date=creation_time,
+            creation_date=creation_time.astimezone(pytz.utc).replace(tzinfo=None),
             file_path=report_filename,
             author_id=request.session.get('id')
         )
