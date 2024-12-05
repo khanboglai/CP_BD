@@ -11,3 +11,10 @@ class ComplexModel(BaseModel):
     name: str
     factory_id: int
     creation_date: datetime
+
+
+class UpdateComplexModel(BaseModel):
+    """ Модель для обновления """
+    name: str
+    factory_id: int
+    creation_date: datetime

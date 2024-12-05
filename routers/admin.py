@@ -10,11 +10,11 @@ from fastapi.templating import Jinja2Templates
 import boto3
 
 from repositories.user import get_users, delete_user
-from repositories.complex import get_complexes, del_complex, check_complex, insert_complex_data
+from repositories.complex import *
 from repositories.files import get_files
 from repositories.works import get_data
 
-from schemas.complex import ComplexModel
+from schemas.complex import ComplexModel, UpdateComplexModel
 
 router = APIRouter()
 
@@ -181,3 +181,34 @@ async def show_works(request: Request):
     data = await get_data()
 
     return templates.TemplateResponse("works.html", {"request": request, "items": data})
+
+
+@router.get("/edit_complex/{id}", response_class=HTMLResponse)
+async def show_edit_page(request: Request, id: int):
+    """ Функция для отображения страницы редактирования комплекса """
+
+    complex_data = await get_complex(id)
+    if not complex_data:
+        raise HTTPException(status_code=404, detail="Complex not found")
+    
+    return templates.TemplateResponse("edit_complexes.html", {"request": request, "complex": complex_data, "complex_id": id})
+
+
+@router.post("/update_complex/{id}")
+async def update_complex(request: Request, id: int, name: str = Form(...), factory_id: int = Form(...), creation_date: str = Form(...)):
+    """ Функция для обновления данных комплекса """
+
+    # if complex_id not in complexes:
+    #     raise HTTPException(status_code=404, detail="Complex not found")
+
+    data = UpdateComplexModel(
+        name = name,
+        factory_id=factory_id,
+        creation_date=creation_date,
+    )
+
+    res = await update_row(id, data)
+    if res:
+        return RedirectResponse(url="/complexes", status_code=303)
+    
+    raise HTTPException(status_code=404, detail="Проблема с обновлением данных!")

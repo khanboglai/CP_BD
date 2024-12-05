@@ -5,7 +5,7 @@ import asyncpg
 from config import DATABASE_URL
 
 
-from schemas.complex import ComplexModel
+from schemas.complex import ComplexModel, UpdateComplexModel
 
 # logging
 logging.basicConfig(level=logging.INFO)
@@ -97,5 +97,25 @@ async def insert_complex_data(comlex: ComplexModel):
 
         logger.info(f"Added new complex with id: {res}")
         return res
+    except asyncpg.PostgresError as e:
+        logger.error(e)
+
+
+async def update_row(id: int, data: UpdateComplexModel):
+    """ Функция для обновления пользователя """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        query = """UPDATE complexes
+        SET name=$2, factory_id=$3, creation_date=$4
+        WHERE ИСН=$1
+        RETURNING ИСН"""
+
+        complex_id = await conn.fetchval(query, id, data.name, data.factory_id, data.creation_date)
+        await conn.close()
+
+        logger.info(f"Updated row with id: {complex_id}")
+        return complex_id
+
     except asyncpg.PostgresError as e:
         logger.error(e)
