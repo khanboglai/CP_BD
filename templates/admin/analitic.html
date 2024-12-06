@@ -6,6 +6,11 @@
     <title>User Activity Chart</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function confirmDelete() {
+            return confirm("Вы уверены, что хотите удалить все записи?");
+        }
+    </script>
 </head>
 <body>
     <div class="container mt-5">
@@ -14,6 +19,7 @@
             <h1 class="text-center">Аналитика по сотрудникам</h1>
             <div>
                 <a href="/admin/users" class="btn btn-secondary mr-2">Назад</a>
+                <a href="/kill_analitic" class="btn btn-danger mr-2" onclick="return confirmDelete();">Сбросить статистику</a>
             </div>
         </div>
         <canvas id="activityChart" width="400" height="200"></canvas>

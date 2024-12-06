@@ -25,3 +25,18 @@ async def get_analitic():
         return result
     except ConnectionError as e:
         logger.error(e)
+
+
+async def delete_analitic():
+    """ Функция для очистки таблицы статистики """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
+        query = """DELETE FROM user_activity_log"""
+
+        res = await conn.execute(query)
+
+        logger.info("Deleted all row from user_activity_log")
+        return res
+    except asyncpg.PostgresError as e:
+        logger.error(e)

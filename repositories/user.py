@@ -159,3 +159,18 @@ async def update_usr(id: int, user_data: UpdateUserModel):
         return res
     except asyncpg.PostgresError as e:
         logger.error(e)
+
+
+async def get_statistic(login: str):
+    """ Достаем статистику для пользователя """
+
+    try:
+        conn = await asyncpg.connect(DATABASE_URL)
+        query = """SELECT activity_count FROM user_activity_log WHERE worker_login=$1"""
+
+        res = await conn.fetchval(query, login)
+
+        logger.info("Selected user activiti")
+        return res        
+    except asyncpg.PostgresError as e:
+        logger.error(e)

@@ -1,8 +1,10 @@
 """ Марштруты для страницы склада """
 
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+import pandas as pd
+import io
 from repositories.storage import insert_data, get_data, update_data, delete_data, get_row
 from schemas.component import Component
 
@@ -82,3 +84,18 @@ async def delete_detail(request: Request, id: int):
     if st:
         return RedirectResponse("/storage", status_code=303)
     raise HTTPException(status_code=404, detail="Невозможно удалить деталь")
+
+
+@router.get("/export_details/csv")
+async def export_details_csv():
+    data = await get_data()
+
+    # Преобразуйте данные в DataFrame
+    df = pd.DataFrame(data)
+
+    # Создайте CSV файл в памяти
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+
+    # Верните CSV файл как ответ
+    return Response(content=csv_buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=export_details.csv"})

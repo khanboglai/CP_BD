@@ -1,10 +1,12 @@
 """ Маршрут для админа """
 
-import os
+import io
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Form, HTTPException, Request
+import pandas as pd
+
+from fastapi import APIRouter, Form, HTTPException, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import boto3
@@ -13,7 +15,7 @@ from repositories.user import get_users, delete_user, get_user, update_usr
 from repositories.complex import *
 from repositories.files import get_files
 from repositories.works import get_data
-from repositories.analitic import get_analitic
+from repositories.analitic import get_analitic, delete_analitic
 
 from schemas.complex import ComplexModel, UpdateComplexModel
 from schemas.user import UpdateUserModel
@@ -247,3 +249,54 @@ async def show_analitic(request: Request):
 
     res = await get_analitic()
     return templates.TemplateResponse("admin/analitic.html", {"request": request, "data": res})
+
+@router.get("/kill_analitic")
+async def kill_analitic():
+    data = await delete_analitic()
+
+    return RedirectResponse(url="/analitic", status_code=303)
+
+
+@router.get("/export_users/csv")
+async def export_users_csv():
+    data = await get_users()
+
+    # Преобразуйте данные в DataFrame
+    df = pd.DataFrame(data)
+
+    # Создайте CSV файл в памяти
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+
+    # Верните CSV файл как ответ
+    return Response(content=csv_buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=export_users.csv"})
+
+
+@router.get("/export_complexes/csv")
+async def export_complexes_csv():
+    data = await get_complexes()
+
+    # Преобразуйте данные в DataFrame
+    df = pd.DataFrame(data)
+
+    # Создайте CSV файл в памяти
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+
+    # Верните CSV файл как ответ
+    return Response(content=csv_buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=export_complexes.csv"})
+
+
+@router.get("/export_works/csv")
+async def export_works_csv():
+    data = await get_data()
+
+    # Преобразуйте данные в DataFrame
+    df = pd.DataFrame(data)
+
+    # Создайте CSV файл в памяти
+    csv_buffer = io.StringIO()
+    df.to_csv(csv_buffer, index=False)
+
+    # Верните CSV файл как ответ
+    return Response(content=csv_buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=export_works.csv"})
