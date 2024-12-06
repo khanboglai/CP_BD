@@ -1,7 +1,7 @@
 """ Описание модели отчета """
 
 from datetime import datetime
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 
 class Document(BaseModel):
@@ -10,4 +10,4 @@ class Document(BaseModel):
     name: str
     creation_date: datetime
     file_path: str
-    author_id: int
+    author_login: str

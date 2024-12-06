@@ -42,7 +42,7 @@ async def get_data():
     try:
         conn = await asyncpg.connect(DATABASE_URL)
 
-        query = """SELECT * FROM storage"""
+        query = """SELECT * FROM storage ORDER BY complex_name"""
 
         rows = await conn.fetch(query)
         result = [dict(row) for row in rows]
@@ -83,7 +83,7 @@ async def update_data(id: int, count: int):
 
 
 async def delete_data(id: int):
-    """ Функция для удаления записи из стаблицы склада """
+    """ Функция для удаления записи из таблицы склада """
 
     try:
         conn = await asyncpg.connect(DATABASE_URL_ADM)

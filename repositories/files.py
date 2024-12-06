@@ -15,7 +15,7 @@ async def get_files():
     try:
         conn = await asyncpg.connect(DATABASE_URL_ADM)
 
-        query = """SELECT * FROM documents"""
+        query = """SELECT * FROM documents ORDER BY creation_date DESC"""
 
         rows = await conn.fetch(query)
         await conn.close()

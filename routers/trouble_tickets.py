@@ -159,7 +159,7 @@ async def submit_report(request: Request,
             name=report_filename,
             creation_date=creation_time.astimezone(pytz.utc).replace(tzinfo=None),
             file_path=report_filename,
-            author_id=request.session.get('id')
+            author_login=request.session.get('user')
         )
 
         await insert_data(doc)

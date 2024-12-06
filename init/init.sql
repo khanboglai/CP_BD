@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS documents (
     name VARCHAR(300),
     creation_date TIMESTAMP,
     file_path TEXT,
-    author_id INT,
-    FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE
+    author_login VARCHAR(100),
+    FOREIGN KEY (author_login) REFERENCES users(login) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS works (
