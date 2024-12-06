@@ -2,7 +2,7 @@
 
 import logging
 import asyncpg
-from config import DATABASE_URL
+from config import DATABASE_URL_ADM
 
 
 from schemas.complex import ComplexModel, UpdateComplexModel
@@ -16,7 +16,7 @@ async def get_complex(complex_id: int):
     """ Функция для выдачи комплекса """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """SELECT * FROM complexes WHERE ИСН=$1"""
         row = await conn.fetchrow(query, complex_id)
@@ -33,7 +33,7 @@ async def get_complexes():
     """ Функция для выдачи комплексов """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """SELECT * FROM complexes"""
         rows = await conn.fetch(query)
@@ -52,7 +52,7 @@ async def del_complex(id: int):
     """ Функция для удаления комплекса """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """DELETE FROM complexes WHERE ИСН=$1"""
 
@@ -69,7 +69,7 @@ async def check_complex(id: int):
     """ Функция для проверки существования комплекса """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """SELECT ИСН FROM complexes WHERE ИСН=$1"""
         res = await conn.fetchval(query, id)
@@ -85,7 +85,7 @@ async def insert_complex_data(comlex: ComplexModel):
     """ Функция для вставки данных о комплексе """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """INSERT INTO complexes (ИСН, name, factory_id, creation_date)
         VALUES ($1, $2, $3, $4)
@@ -105,7 +105,7 @@ async def update_row(id: int, data: UpdateComplexModel):
     """ Функция для обновления пользователя """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
         query = """UPDATE complexes
         SET name=$2, factory_id=$3, creation_date=$4
         WHERE ИСН=$1

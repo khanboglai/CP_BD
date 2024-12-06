@@ -2,7 +2,7 @@
 
 import logging
 import asyncpg
-from config import DATABASE_URL
+from config import DATABASE_URL_ADM
 
 
 logging.basicConfig(level=logging.INFO)
@@ -13,7 +13,7 @@ async def get_analitic():
     """ получить все записи """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
 
         query = """SELECT * FROM analitic_view"""
 

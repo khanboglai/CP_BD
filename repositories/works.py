@@ -2,7 +2,7 @@
 
 import logging
 import asyncpg
-from config import DATABASE_URL
+from config import DATABASE_URL_ADM
 
 
 # logging
@@ -14,7 +14,7 @@ async def get_data():
     """ Функция для выдачи всех записей """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
         query = """SELECT * FROM works"""
 
         rows = await conn.fetch(query)
@@ -32,7 +32,7 @@ async def insert_row(data: dict):
     """ Функция для вставки данных """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
         query = """INSERT INTO works (worker_login, ИСН, finisd_date, description, tt_id)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id

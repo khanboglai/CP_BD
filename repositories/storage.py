@@ -2,7 +2,7 @@
 
 import logging
 import asyncpg
-from config import DATABASE_URL
+from config import DATABASE_URL, DATABASE_URL_ADM
 
 
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +86,7 @@ async def delete_data(id: int):
     """ Функция для удаления записи из стаблицы склада """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL)
+        conn = await asyncpg.connect(DATABASE_URL_ADM)
         query = """DELETE FROM storage WHERE id=$1"""
 
         res = await conn.execute(query, id)
