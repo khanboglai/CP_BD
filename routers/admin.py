@@ -16,6 +16,8 @@ from repositories.complex import *
 from repositories.files import get_files
 from repositories.works import get_data
 from repositories.analitic import get_analitic, delete_analitic
+from repositories.dump import dump_database
+from repositories.restote import restore_database
 
 from schemas.complex import ComplexModel, UpdateComplexModel
 from schemas.user import UpdateUserModel
@@ -311,3 +313,15 @@ async def export_works_csv(request: Request, admin: None = Depends(verify_admin)
 
     # Верните CSV файл как ответ
     return Response(content=csv_buffer.getvalue(), media_type="text/csv", headers={"Content-Disposition": "attachment; filename=export_works.csv"})
+
+
+@router.get("/dump")
+async def dump_db():
+    await dump_database('dump.json')
+    return {"message": "Database dumped successfully"}
+
+
+@router.get("/restore")
+async def restore_db():
+    await restore_database('dump.json')
+    return {"message": "Database restored successfully"}
