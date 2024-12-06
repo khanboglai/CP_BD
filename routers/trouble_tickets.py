@@ -187,11 +187,15 @@ async def read_root(request: Request):
         pdf_files = []
         response = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=f"{user}/")
         for obj in response.get('Contents', []):
-            # print(obj['Key'])
             if obj['Key'].endswith('.pdf'):
-                pdf_files.append(obj['Key'])
+                pdf_files.append({
+                    'key': obj['Key'],
+                    'last_modified': obj['LastModified']
+                })
 
-        # print(pdf_files)
+        # Сортируем файлы по времени последнего изменения
+        pdf_files.sort(key=lambda x: x['last_modified'], reverse=True)  # Сортировка по убыванию времени
+
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Credentials not available: {e}")
     
@@ -199,7 +203,7 @@ async def read_root(request: Request):
     if not pdf_files:
         info_message = "Вы еще не создали файлов"
         
-    return templates.TemplateResponse("worker/files.html", {"request": request, "pdf_files": pdf_files, "message": info_message})
+    return templates.TemplateResponse("worker/files.html", {"request": request, "pdf_files": [file['key'] for file in pdf_files], "message": info_message})
 
 
 @router.get("/pdfs/{user}/{pdf_name}")
