@@ -28,11 +28,11 @@ async def get_data():
         logger.error(e)
 
 
-async def insert_row(data: dict):
+async def insert_row(conn, data: dict):
     """ Функция для вставки данных """
 
     try:
-        conn = await asyncpg.connect(DATABASE_URL_ADM)
+        # conn = await asyncpg.connect(DATABASE_URL_ADM)
         query = """INSERT INTO works (worker_login, ИСН, finisd_date, description, tt_id)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
@@ -47,7 +47,7 @@ async def insert_row(data: dict):
         )
 
         work_id = await conn.fetchval(query, *values)
-        await conn.close()
+        # await conn.close()
 
         logger.info(f"Inserted row with id {work_id}")
         return work_id

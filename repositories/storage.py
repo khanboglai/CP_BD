@@ -112,3 +112,35 @@ async def get_row(complex_name: str):
         return res
     except asyncpg.PostgresError as e:
         logger.error(e)
+
+
+async def get_detail_name(conn, id: int):
+    """ Функция для выдачи имени детали и обновления колличества """
+
+    try:
+        # conn = await asyncpg.connect(DATABASE_URL)
+
+        query = """SELECT name FROM storage WHERE id=$1"""
+        complex_name = await conn.fetchval(query, id)
+
+        return complex_name
+    except ConnectionError as e:
+        logger.error(e)
+
+
+async def insert_used_detalis(conn, work_id: int, detail_id: int):
+    """ Функция для вставки деталей в промежуточную таблицу """
+
+    try:
+        # conn = await asyncpg.connect(DATABASE_URL)
+        query = """INSERT INTO used_details (work_id, detail_id)
+        VALUES ($1, $2)
+        RETURNING id
+        """
+
+        row_id = await conn.fetchval(query, work_id, detail_id)
+
+        logger.info(f"Inserted data in table used_datails with id: {row_id}")
+        return row_id
+    except asyncpg.PostgresError as e:
+        logger.error(e)

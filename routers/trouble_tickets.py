@@ -4,19 +4,22 @@ import os
 import pytz
 import logging
 from datetime import datetime
-from urllib.parse import quote
 import uuid
-from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi import APIRouter, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
+import asyncpg
 import boto3
 
-from repositories.tt import get_data, update_get_row, get_details, update_get_detail, cancel_update
+from repositories.tt import get_data, update_get_row, get_details, cancel_update
 from repositories.document import insert_data
 from repositories.complex import get_complex
 from repositories.works import insert_row
+from repositories.storage import get_detail_name, insert_used_detalis
+from config import DATABASE_URL
 from schemas.document import Document
 from pdf_generator import create_pdf
+
 
 templates = Jinja2Templates(directory="templates")
 
@@ -49,13 +52,17 @@ async def read_table(request: Request, id: int = None):
     if 'user' not in request.session:
         return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
     
+    error_msg = None
     if id is not None:
+        error_msg = "На складе нет деталей для выполнения работы"
         await cancel_update(id)
 
     items = await get_data()
-    if items is not None:
-        return templates.TemplateResponse("worker/tt.html", {"request": request, "items": items})
-    return {"message": "Данные не найдены"}
+    info_message = None
+    if not items:
+        info_message = "Заявок пока нет"
+    
+    return templates.TemplateResponse("worker/tt.html", {"request": request, "items": items, "message": info_message, "error": error_msg})
 
 
 @router.post("/report")
@@ -109,31 +116,44 @@ async def submit_report(request: Request,
 
     user = request.session['user']
 
+    timezone = pytz.timezone('Europe/Moscow')
+    creation_time = datetime.now(timezone)
 
-    names = []
-    if selected_details is not None:
-        selected_details = list(map(int, selected_details))
-        for detail_id in selected_details: # выдача детаелй, которые были выбраны на фронте и вычитание из таблицы склада
-            names.append(await update_get_detail(detail_id))
-    
+    work = {
+        "worker_login": user,
+        "ИСН": complex_id,
+        "finisd_date": creation_time.replace(tzinfo=None),
+        "description": description,
+        "tt_id": id,
+    }
+
+    conn = await asyncpg.connect(DATABASE_URL)
 
     try:
-        timezone = pytz.timezone('Europe/Moscow')
-        creation_time = datetime.now(timezone) # Разобраться с локализацией времени, проблема с БД``
+        async with conn.transaction():
+
+            work_id = await insert_row(conn, work)
+
+            names = []
+            if selected_details:
+                selected_details = list(map(int, selected_details))
+                for detail_id in selected_details: # выдача детаелй, которые были выбраны на фронте и вычитание из таблицы склада
+                    names.append(await get_detail_name(conn, detail_id))
+
+                    row_id = await insert_used_detalis(conn, work_id, detail_id)
+                    if row_id is None:
+                        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Что-то не так с БД")
+    except Exception as e:
+        logger.error(f"Exception: {e}")
+        return RedirectResponse(url=f"/trouble_tickets?id={id}", status_code=303)
+    finally:
+        await conn.close()
+    
+    try:
         report_filename = f"report_{uuid.uuid4()}_{item_data['id']}_{creation_time}_{user}.pdf"
         create_pdf(report_filename, item_data, description, names)
 
         s3_client.upload_file(report_filename, BUCKET_NAME, f"{user}/" + report_filename)
-
-        work = {
-            "worker_login": user,
-            "ИСН": complex_id,
-            "finisd_date": creation_time.astimezone(pytz.utc).replace(tzinfo=None),
-            "description": description,
-            "tt_id": id,
-        }
-
-        await insert_row(work)
 
         doc = Document(
             name=report_filename,
@@ -158,7 +178,7 @@ async def submit_report(request: Request,
 @router.get("/files", response_class=HTMLResponse)
 async def read_root(request: Request):
     if 'user' not in request.session:
-        raise HTTPException(status_code=403, detail="Not authenticated")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     
     user = request.session.get('user')
 
@@ -174,8 +194,12 @@ async def read_root(request: Request):
         # print(pdf_files)
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Credentials not available: {e}")
-
-    return templates.TemplateResponse("worker/files.html", {"request": request, "pdf_files": pdf_files})
+    
+    info_message = None
+    if not pdf_files:
+        info_message = "Вы еще не создали файлов"
+        
+    return templates.TemplateResponse("worker/files.html", {"request": request, "pdf_files": pdf_files, "message": info_message})
 
 
 @router.get("/pdfs/{user}/{pdf_name}")

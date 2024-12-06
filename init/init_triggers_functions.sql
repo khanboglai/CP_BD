@@ -1,3 +1,5 @@
+-- тут триггер для логгирования заявок
+
 CREATE OR REPLACE FUNCTION log_ticket_changes()
 RETURNS TRIGGER AS $func$
 BEGIN
@@ -13,14 +15,6 @@ FOR EACH ROW
 EXECUTE FUNCTION log_ticket_changes();
 
 -- тут триггер для ведения анализа успеваемости
-
-CREATE TABLE IF NOT EXISTS user_activity_log (
-    id SERIAL PRIMARY KEY,
-    worker_login VARCHAR(100),
-    activity_count INT DEFAULT 0,
-    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (worker_login)
-);
 
 CREATE OR REPLACE FUNCTION log_user_activity()
 RETURNS TRIGGER AS $func$
@@ -46,3 +40,22 @@ CREATE TRIGGER after_insert_works
 AFTER INSERT ON works
 FOR EACH ROW
 EXECUTE FUNCTION log_user_activity();
+
+-- тут триггер для обновления количества в таблице склада
+
+CREATE OR REPLACE FUNCTION decrement_storage_count()
+RETURNS TRIGGER AS $func$
+BEGIN
+    -- Уменьшаем количество на 1 для соответствующего detail_id
+    UPDATE storage
+    SET count = count - 1
+    WHERE id = NEW.detail_id;
+
+    RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_decrement_storage_count
+AFTER INSERT ON used_details
+FOR EACH ROW
+EXECUTE FUNCTION decrement_storage_count();

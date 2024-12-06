@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS complexes (
 CREATE TABLE IF NOT EXISTS storage (
     id SERIAL PRIMARY KEY,
     name VARCHAR(300),
-    count INT,
+    count INT CHECK (count > 0),
     complex_name VARCHAR(300),
     CONSTRAINT fk_complex_name FOREIGN KEY (complex_name) REFERENCES complexes(name) ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -55,12 +55,26 @@ CREATE TABLE IF NOT EXISTS works (
     CONSTRAINT fk_tt_id FOREIGN KEY (tt_id) REFERENCES trouble_tickets(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
--- тут триггер для логгирования заявок
-
 CREATE TABLE ticket_logs (
     id SERIAL PRIMARY KEY,
     ticket_id SERIAL,
     old_status BOOLEAN,
     new_status BOOLEAN,
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE used_details (
+    id SERIAL PRIMARY KEY,
+    work_id SERIAL,
+    detail_id SERIAL,
+    CONSTRAINT fk_work_id FOREIGN KEY (work_id) REFERENCES works(id) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT fk_detail_id FOREIGN KEY (detail_id) REFERENCES storage(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS user_activity_log (
+    id SERIAL PRIMARY KEY,
+    worker_login VARCHAR(100),
+    activity_count INT DEFAULT 0,
+    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (worker_login)
 );

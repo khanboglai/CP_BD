@@ -25,6 +25,19 @@
                 <a href="/files" class="btn btn-secondary mr-2">Файлы</a>
             </div>
         </div>
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if message %}
+        <div class="alert alert-primary" role="alert">
+            {{ message }}
+        </div>
+        {% endif %}
+        
         <div class="table-container">
             <table class="table table-bordered">
                 <thead>

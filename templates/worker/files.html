@@ -17,6 +17,12 @@
             </div>
         </div>
         <ul class="list-group">
+            {% if message %}
+            <div class="alert alert-primary" role="alert">
+                {{ message }}
+            </div>
+            {% endif %}
+
             {% for pdf in pdf_files %}
                 <li class="list-group-item">
                     <a href="/pdfs/{{ pdf }}" target="_blank" class="btn btn-primary">{{ pdf }}</a>
