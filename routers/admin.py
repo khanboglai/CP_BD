@@ -55,7 +55,7 @@ async def admin_users(request: Request):
     employees = await get_users()
     
     if employees:
-        return templates.TemplateResponse("admin.html", {"request": request, "employees": employees})
+        return templates.TemplateResponse("admin/users.html", {"request": request, "employees": employees})
     return {"message": "Some problems"}
 
 
@@ -66,7 +66,7 @@ async def admin_files(request: Request):
 
     files = await get_files()
 
-    return templates.TemplateResponse("doc.html", {"request": request, "files": files})
+    return templates.TemplateResponse("admin/doc.html", {"request": request, "files": files})
 
 
 @router.get("/admin/{filename}")
@@ -104,7 +104,7 @@ async def delete_usr(request: Request, login: str):
 
     user = request.session.get('user')
     if user == login:
-        return templates.TemplateResponse("midlle_delet.html", {"request": request})
+        return templates.TemplateResponse("admin/midlle_delet.html", {"request": request})
     
     st = await delete_user(login)
     if st:
@@ -122,7 +122,7 @@ async def show_complexes(request: Request):
 
     data = await get_complexes()
     if data:
-        return templates.TemplateResponse("complexes.html", {"request": request, "complexes": data})
+        return templates.TemplateResponse("admin/complexes.html", {"request": request, "complexes": data})
     raise HTTPException(status_code=404, detail="Доделать надо чтобы перенаправляло")
 
 
@@ -142,7 +142,7 @@ async def delete_complex(request: Request, id: int):
 async def send_form_complex(request: Request):
     """ Функция для отображения формы для добавления комплекса """
 
-    return templates.TemplateResponse("insert_complex.html", {"request": request, "error": None, "form_data": {}})
+    return templates.TemplateResponse("admin/insert_complex.html", {"request": request, "error": None, "form_data": {}})
 
 
 @router.post("/add_complex")
@@ -164,12 +164,12 @@ async def insert_complex(request: Request,
 
     check = await check_complex(ИСН)
     if check:
-        return templates.TemplateResponse("insert_complex.html", {"request": request, "error": "Коплекс с таким ИСН уже существует", "form_data": complex_data})
+        return templates.TemplateResponse("admin/insert_complex.html", {"request": request, "error": "Коплекс с таким ИСН уже существует", "form_data": complex_data})
     
     res = await insert_complex_data(complex_data)
     if res:
         return RedirectResponse(url="/complexes", status_code=303)
-    return templates.TemplateResponse("insert_complex.html", {
+    return templates.TemplateResponse("admin/insert_complex.html", {
         "request": request,
         "error": "Проверьте данные",
         "form_data": complex_data
@@ -182,7 +182,7 @@ async def show_works(request: Request):
 
     data = await get_data()
 
-    return templates.TemplateResponse("works.html", {"request": request, "items": data})
+    return templates.TemplateResponse("admin/works.html", {"request": request, "items": data})
 
 
 @router.get("/edit_complex/{id}", response_class=HTMLResponse)
@@ -193,7 +193,7 @@ async def show_edit_page_complex(request: Request, id: int):
     if not complex_data:
         raise HTTPException(status_code=404, detail="Complex not found")
     
-    return templates.TemplateResponse("edit_complexes.html", {"request": request, "complex": complex_data, "complex_id": id})
+    return templates.TemplateResponse("admin/edit_complexes.html", {"request": request, "complex": complex_data, "complex_id": id})
 
 
 @router.post("/update_complex/{id}")
@@ -224,7 +224,7 @@ async def show_edit_page_user(request: Request, login: str):
     if not user_data:
         raise HTTPException(status_code=404, detail="User not found")
     
-    return templates.TemplateResponse("edit_users.html", {"request": request, "user": user_data, "user_id": id})
+    return templates.TemplateResponse("admin/edit_users.html", {"request": request, "user": user_data, "user_id": id})
 
 
 @router.post("/update_user/{id}")
@@ -246,4 +246,4 @@ async def show_analitic(request: Request):
     """ Функция для отображения аналитики """
 
     res = await get_analitic()
-    return templates.TemplateResponse("analitic.html", {"request": request, "data": res})
+    return templates.TemplateResponse("admin/analitic.html", {"request": request, "data": res})

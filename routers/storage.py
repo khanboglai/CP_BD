@@ -26,7 +26,7 @@ async def storage_view(request: Request):
 
     items = await get_data()
     if items:
-        return templates.TemplateResponse("storage.html", {"request": request, "items": items})
+        return templates.TemplateResponse("admin/storage.html", {"request": request, "items": items})
     raise HTTPException(status_code=404, detail="Нет данных")
 
 
@@ -47,7 +47,7 @@ async def storage_insert(
 
     check = await get_row(complex_name)
     if check is None:
-        return templates.TemplateResponse("insert_complex.html", {"request": request, "error": "Добавьте комплекс в базу и вернитесь для повторной отправки данных", "form_data": {}})
+        return templates.TemplateResponse("admin/insert_complex.html", {"request": request, "error": "Добавьте комплекс в базу и вернитесь для повторной отправки данных", "form_data": {}})
 
     st = await insert_data(storage_data.model_dump())
     if st:

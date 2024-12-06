@@ -28,5 +28,5 @@ async def lk(request: Request):
     res = await get_user(user)
 
     if res:
-        return templates.TemplateResponse("lk.html", {"request": request, "user": res})
+        return templates.TemplateResponse("worker/lk.html", {"request": request, "user": res})
     return HTTPException(status_code=404, detail="Данных нет")

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список файлов</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .table-container {
+            max-height: 800px; /* Установите желаемую высоту */
+            overflow-y: auto; /* Включите вертикальную прокрутку */
+            border: 1px solid #dee2e6; /* Добавьте границу для контейнера */
+            border-radius: 0.25rem; /* Закруглите углы */
+        }
+    </style>
+
+    <script>
+        window.onload = function() {
+            // Проверяем наличие файлов
+            const items = {{ items|length }}; // Получаем количество файлов из шаблона
+
+            if (items === 0) {
+                alert("Работы отсутствуют. Вы будете перенаправлены обратно через 3 секунды.");
+                setTimeout(() => {
+                    window.location.href = "/admin/users"; // Замените на нужный URL
+                }, 3000);
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Список работ</h1>
+
+        <div class="table-container">
+            <table class="table table-bordered mt-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Сотрудник</th>
+                        <th>ИСН</th>
+                        <th>Дата окончания</th>
+                        <th>Описание</th>
+                        <th>Номер заявки</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.worker_login }}</td>
+                        <td>{{ item.ИСН }}</td>
+                        <td>{{ item.finisd_date }}</td>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.tt_id }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/admin/users" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+</body>
+</html>

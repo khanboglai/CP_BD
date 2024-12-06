@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Административная панель</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .table-container {
+            max-height: 800px; /* Установите желаемую высоту */
+            overflow-y: auto; /* Включите вертикальную прокрутку */
+            border: 1px solid #dee2e6; /* Добавьте границу для контейнера */
+            border-radius: 0.25rem; /* Закруглите углы */
+        }
+    </style>
+
+    <script>
+        function confirmDelete(event) {
+            if (!confirm("Вы уверены, что хотите удалить этого сотрудника?")) {
+                event.preventDefault(); // Отменяем отправку формы, если пользователь нажал "Отмена"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="text-center">Список комплексов</h1>
+            <div>
+                <a href="/storage" class="btn btn-secondary mr-2">Склад</a>
+                <a href="/admin/files" class="btn btn-secondary mr-2">Файлы</a>
+                <a href="/admin/users" class="btn btn-secondary mr-2">Пользователи</a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-bordered mt-4" id="employeeTable">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ИСН</th>
+                        <th>Название</th>
+                        <th>Серийный номер</th>
+                        <th>Дата производства</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complex in complexes %}
+                    <tr>
+                        <td>{{ complex.ИСН }}</td>
+                        <td>{{ complex.name }}</td>
+                        <td>{{ complex.factory_id }}</td>
+                        <td>{{ complex.creation_date }}</td>
+                        <td>
+                            <a href="/edit_complex/{{ complex.ИСН }}" class="btn btn-warning">Редактировать</a>
+                            <form action="/del/{{ complex.ИСН }}" method="post" style="display:inline;" onsubmit="confirmDelete(event);">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" class="btn btn-danger">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/add_complex" class="btn btn-success">Добавить комплекс</a>
+            <button class="btn btn-info">Экспортировать данные</button>
+        </div>
+    </div>
+</body>
+</html>

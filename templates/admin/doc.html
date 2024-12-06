@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список файлов</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .table-container {
+            max-height: 800px; /* Установите желаемую высоту */
+            overflow-y: auto; /* Включите вертикальную прокрутку */
+            border: 1px solid #dee2e6; /* Добавьте границу для контейнера */
+            border-radius: 0.25rem; /* Закруглите углы */
+        }
+    </style>
+    
+    <script>
+        window.onload = function() {
+            // Проверяем наличие файлов
+            const files = {{ files|length }}; // Получаем количество файлов из шаблона
+
+            if (files === 0) {
+                alert("Файлы отсутствуют. Вы будете перенаправлены обратно через 3 секунды.");
+                setTimeout(() => {
+                    window.location.href = "/admin/users"; // Замените на нужный URL
+                }, 3000);
+            }
+        };
+    </script>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h1 class="text-center">Список файлов</h1>
+
+        <div class="table-container">
+            <table class="table table-bordered mt-4">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя файла</th>
+                        <th>Дата создания</th>
+                        <th>Автор</th>
+                        <th>Ссылка на файл</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in files %}
+                    <tr>
+                        <td>{{ file.id }}</td>
+                        <td>{{ file.name }}</td>
+                        <td>{{ file.creation_date }}</td>
+                        <td>{{ file.author_id }}</td>
+                        <td><a href="{{ file.file_path }}" target="_blank">Скачать</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="/admin/users" class="btn btn-secondary">Назад</a>
+        </div>
+    </div>
+
+</body>
+</html>

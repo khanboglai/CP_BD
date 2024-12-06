@@ -54,7 +54,7 @@ async def read_table(request: Request, id: int = None):
 
     items = await get_data()
     if items is not None:
-        return templates.TemplateResponse("table.html", {"request": request, "items": items})
+        return templates.TemplateResponse("worker/tt.html", {"request": request, "items": items})
     return {"message": "Данные не найдены"}
 
 
@@ -70,7 +70,7 @@ async def create_report(request: Request, item_id: int = Form(...)):
     details = await get_details(complex_item['name'])
 
     if item and details:
-        return templates.TemplateResponse("report.html", {"request": request, "item": item, "details": details, "error": None})
+        return templates.TemplateResponse("worker/report.html", {"request": request, "item": item, "details": details, "error": None})
     return {"message": "Элемент не найден"}
 
 
@@ -101,11 +101,11 @@ async def submit_report(request: Request,
 
     if selected_details is None and no_details is None:
         details = await get_details(complex_info['name'])
-        return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Выберите что-то из списка."})
+        return templates.TemplateResponse("worker/report.html", {"request": request, "item": item_data, "details": details, "error": "Выберите что-то из списка."})
 
     if len(description) == 0:
         details = await get_details(complex_info['name'])
-        return templates.TemplateResponse("report.html", {"request": request, "item": item_data, "details": details, "error": "Добавьте описание работы!"})
+        return templates.TemplateResponse("worker/report.html", {"request": request, "item": item_data, "details": details, "error": "Добавьте описание работы!"})
 
     user = request.session['user']
 
@@ -175,7 +175,7 @@ async def read_root(request: Request):
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Credentials not available: {e}")
 
-    return templates.TemplateResponse("files.html", {"request": request, "pdf_files": pdf_files})
+    return templates.TemplateResponse("worker/files.html", {"request": request, "pdf_files": pdf_files})
 
 
 @router.get("/pdfs/{user}/{pdf_name}")
