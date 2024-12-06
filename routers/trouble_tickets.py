@@ -38,6 +38,7 @@ s3_client = boto3.client(
     aws_secret_access_key='file_server_secret',  # Замените на ваш Secret Key
 )
 
+# настройка подключения к s3
 BUCKET_NAME = 'storage-mvs'
 try:
     s3_client.create_bucket(Bucket=BUCKET_NAME)
@@ -50,7 +51,7 @@ async def read_table(request: Request, id: int = None):
     """ отображение данных на странице """
 
     if 'user' not in request.session:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
     error_msg = None
     if id is not None:
@@ -70,7 +71,7 @@ async def create_report(request: Request, item_id: int = Form(...)):
     """ Форма для отчета """
 
     if 'user' not in request.session:
-        raise HTTPException(status_code=403, detail="Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
     item = await update_get_row(item_id)
     complex_item = await get_complex(item['ИСН'])
@@ -78,7 +79,7 @@ async def create_report(request: Request, item_id: int = Form(...)):
 
     if item and details:
         return templates.TemplateResponse("worker/report.html", {"request": request, "item": item, "details": details, "error": None})
-    return {"message": "Элемент не найден"}
+    raise HTTPException(status_code=500, detail="Нет деталей для данного комлекса")
 
 
 @router.post("/submit_report")
@@ -93,7 +94,7 @@ async def submit_report(request: Request,
     """ Создание отчета """
 
     if 'user' not in request.session:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
 
     item_data = {
@@ -142,7 +143,7 @@ async def submit_report(request: Request,
 
                     row_id = await insert_used_detalis(conn, work_id, detail_id)
                     if row_id is None:
-                        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Что-то не так с БД")
+                        raise HTTPException(status_code=500, detail="Что-то не так с БД")
     except Exception as e:
         logger.error(f"Exception: {e}")
         return RedirectResponse(url=f"/trouble_tickets?id={id}", status_code=303)
@@ -177,8 +178,9 @@ async def submit_report(request: Request,
 
 @router.get("/files", response_class=HTMLResponse)
 async def read_root(request: Request):
+    """ Функция для отображения файлов на странице """
     if 'user' not in request.session:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
     user = request.session.get('user')
 
@@ -208,6 +210,11 @@ async def read_root(request: Request):
 
 @router.get("/pdfs/{user}/{pdf_name}")
 async def get_pdf(pdf_name: str, request: Request):
+    """ Функция для отображения файлов """
+
+    if 'user' not in request.session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
     pdf_path = f"{pdf_name}"  # Путь к файлу в MinIO
     try:
         # Получаем файл из MinIO

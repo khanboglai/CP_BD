@@ -56,4 +56,10 @@ async def catch_all(full_path: str):
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 404:
         return templates.TemplateResponse("errors/404.html", {"request": request, "error": exc.detail})
+    
+    if exc.status_code == 401 and exc.detail == "Not authenticated":
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе!"})
+    elif exc.status_code == 401 and exc.detail == "Not authenticated how admin":
+        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе как админ!"})
+    
     return HTMLResponse(content="Internal Server Error", status_code=500)

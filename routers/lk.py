@@ -22,7 +22,7 @@ async def lk(request: Request):
     """ Функция для отображения личного кабиента """
 
     if 'user' not in request.session:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
     user = request.session.get('user')
     res = await get_user(user)

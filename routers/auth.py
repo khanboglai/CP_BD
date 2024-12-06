@@ -57,6 +57,13 @@ async def get_register_form(request: Request):
 
     """ отображение страницы регистрации """
 
+    if 'user' not in request.session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    role = request.session.get("role")
+    if role != "admin":
+        raise HTTPException(status_code=401, detail="Not authenticated how admin")
+
     return templates.TemplateResponse("register.html", {"request": request, "error": None, "form_data": {}})
 
 
@@ -71,6 +78,13 @@ async def register_user(
     hashed_password: str = Form(...),
 ):
     """ сохранение данных в базе """
+
+    if 'user' not in request.session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    role = request.session.get("role")
+    if role != "admin":
+        raise HTTPException(status_code=401, detail="Not authenticated how admin")
 
     # Преобразуем строку даты в объект datetime
     birth_date = datetime.strptime(birth_date, "%Y-%m-%d")

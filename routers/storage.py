@@ -1,6 +1,6 @@
 """ Марштруты для страницы склада """
 
-from fastapi import APIRouter, Form, HTTPException, Request, Response
+from fastapi import APIRouter, Form, HTTPException, Request, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 import pandas as pd
@@ -14,17 +14,18 @@ templates = Jinja2Templates(directory="templates")
 router = APIRouter()
 
 
-@router.get("/storage")
-async def storage_view(request: Request):
-    """ отображение страницы скалада """
-
-    user = request.session.get('user')
-    if user is None:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизируйтесь в системе!"})
+async def verify_admin(request: Request):
+    if 'user' not in request.session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     
     role = request.session.get("role")
     if role != "admin":
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизируйтесь в системе как администратор!"})
+        raise HTTPException(status_code=401, detail="Not authenticated how admin")
+
+
+@router.get("/storage")
+async def storage_view(request: Request, admin: None = Depends(verify_admin)):
+    """ отображение страницы скалада """
 
     items = await get_data()
     if items:
@@ -37,7 +38,8 @@ async def storage_insert(
     request: Request,
     name: str = Form(),
     count: int = Form(),
-    complex_name: str = Form()
+    complex_name: str = Form(),
+    admin: None = Depends(verify_admin)
 ):
     """ сохранение компонент в базе """
 
@@ -58,17 +60,9 @@ async def storage_insert(
 
 
 @router.post("/update_inventory")
-async def update_inventory(request: Request, id: int = Form(...), count: int = Form(...)):
+async def update_inventory(request: Request, id: int = Form(...), count: int = Form(...), admin: None = Depends(verify_admin)):
 
     """ обновление значений в базе склада """
-
-    user = request.session.get('user')
-    if user is None:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизируйтесь в системе!"})
-    
-    role = request.session.get("role")
-    if role != "admin":
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизируйтесь в системе как администратор!"})
 
     st = await update_data(id, count)
     if st:
@@ -77,7 +71,7 @@ async def update_inventory(request: Request, id: int = Form(...), count: int = F
 
 
 @router.post("/deletedetail/{id}")
-async def delete_detail(request: Request, id: int):
+async def delete_detail(request: Request, id: int, admin: None = Depends(verify_admin)):
     """ Функция для удаления деталей склада """
 
     st = await delete_data(id)
@@ -87,7 +81,9 @@ async def delete_detail(request: Request, id: int):
 
 
 @router.get("/export_details/csv")
-async def export_details_csv():
+async def export_details_csv(request: Request, admin: None = Depends(verify_admin)):
+    """ Экспорт таблицы деталей """
+    
     data = await get_data()
 
     # Преобразуйте данные в DataFrame

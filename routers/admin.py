@@ -6,7 +6,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from fastapi import APIRouter, Form, HTTPException, Request, Response
+from fastapi import APIRouter, Form, HTTPException, Request, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 import boto3
@@ -36,6 +36,7 @@ s3_client = boto3.client(
     aws_secret_access_key='file_server_secret',  # Замените на ваш Secret Key
 )
 
+# настройка бакета s3
 BUCKET_NAME = 'storage-mvs'
 try:
     s3_client.create_bucket(Bucket=BUCKET_NAME)
@@ -43,16 +44,18 @@ except Exception as e:
     logger.warning(f"S3: {e}")
 
 
-@router.get("/admin/users", response_class=HTMLResponse)
-async def admin_users(request: Request):
-    """ Страница админа """
-    
+async def verify_admin(request: Request):
     if 'user' not in request.session:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
-
-    role = request.session.get('role')
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    role = request.session.get("role")
     if role != "admin":
-        return templates.TemplateResponse("login.html", {"request": request, "error": "У вас нет прав для посещения этой страницы"})
+        raise HTTPException(status_code=401, detail="Not authenticated how admin")
+
+
+@router.get("/admin/users", response_class=HTMLResponse)
+async def admin_users(request: Request, admin: None = Depends(verify_admin)):
+    """ Страница админа """
     
     employees = await get_users()
     
@@ -62,9 +65,7 @@ async def admin_users(request: Request):
 
 
 @router.get("/admin/files")
-async def admin_files(request: Request):
-
-    # check users
+async def admin_files(request: Request, admin: None = Depends(verify_admin)):
 
     files = await get_files()
 
@@ -72,10 +73,8 @@ async def admin_files(request: Request):
 
 
 @router.get("/admin/{filename}")
-async def download_file(filename: str, request: Request):
-    user = request.session.get('user')
-    if not user:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+async def download_file(filename: str, request: Request, admin: None = Depends(verify_admin)):
+    """ Просмотр файлов админом """
 
     filename_without_extension = filename[:-4]
     # Разделяем строку по символу '_'
@@ -101,7 +100,7 @@ async def download_file(filename: str, request: Request):
 
 
 @router.post("/delete/{login}")
-async def delete_usr(request: Request, login: str):
+async def delete_usr(request: Request, login: str, admin: None = Depends(verify_admin)):
     """ Функция для удаления пользователя """
 
     user = request.session.get('user')
@@ -115,12 +114,8 @@ async def delete_usr(request: Request, login: str):
 
 
 @router.get("/complexes", response_class=HTMLResponse)
-async def show_complexes(request: Request):
+async def show_complexes(request: Request, admin: None = Depends(verify_admin)):
     """ Функция для отображения комплексов """
-
-    user = request.session.get('user')
-    if not user:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
 
     data = await get_complexes()
     if data:
@@ -129,10 +124,8 @@ async def show_complexes(request: Request):
 
 
 @router.post("/del/{id}")
-async def delete_complex(request: Request, id: int):
-    user = request.session.get('user')
-    if not user:
-        return templates.TemplateResponse("login.html", {"request": request, "error": "Авторизуйтесь в системе"})
+async def delete_complex(request: Request, id: int, admin: None = Depends(verify_admin)):
+    """ Удалить комплекс """
     
     st = await del_complex(id)
     if st:
@@ -141,7 +134,7 @@ async def delete_complex(request: Request, id: int):
 
 
 @router.get("/add_complex", response_class=HTMLResponse)
-async def send_form_complex(request: Request):
+async def send_form_complex(request: Request, admin: None = Depends(verify_admin)):
     """ Функция для отображения формы для добавления комплекса """
 
     return templates.TemplateResponse("admin/insert_complex.html", {"request": request, "error": None, "form_data": {}})
@@ -152,7 +145,8 @@ async def insert_complex(request: Request,
                         ИСН: int = Form(...),
                         name: str = Form(...),
                         factory_id: int = Form(...),
-                        creation_date: str = Form(...)):
+                        creation_date: str = Form(...),
+                        admin: None = Depends(verify_admin)):
     """ Добавленик комплекса в базу """
 
     creation_date = datetime.strptime(creation_date, "%Y-%m-%d")
@@ -179,7 +173,7 @@ async def insert_complex(request: Request,
 
 
 @router.get("/works", response_class=HTMLResponse)
-async def show_works(request: Request):
+async def show_works(request: Request, admin: None = Depends(verify_admin)):
     """ Функция для отображения работ """
 
     data = await get_data()
@@ -188,7 +182,7 @@ async def show_works(request: Request):
 
 
 @router.get("/edit_complex/{id}", response_class=HTMLResponse)
-async def show_edit_page_complex(request: Request, id: int):
+async def show_edit_page_complex(request: Request, id: int, admin: None = Depends(verify_admin)):
     """ Функция для отображения страницы редактирования комплекса """
 
     complex_data = await get_complex(id)
@@ -199,11 +193,12 @@ async def show_edit_page_complex(request: Request, id: int):
 
 
 @router.post("/update_complex/{id}")
-async def update_complex(request: Request, id: int, name: str = Form(...), factory_id: int = Form(...), creation_date: str = Form(...)):
+async def update_complex(request: Request, id: int, name: str = Form(...), factory_id: int = Form(...), creation_date: str = Form(...), admin: None = Depends(verify_admin)):
     """ Функция для обновления данных комплекса """
-
-    # if complex_id not in complexes:
-    #     raise HTTPException(status_code=404, detail="Complex not found")
+    
+    complex_data = await get_complex(id)
+    if not complex_data:
+        raise HTTPException(status_code=404, detail="Complex not found")
 
     data = UpdateComplexModel(
         name = name,
@@ -219,7 +214,7 @@ async def update_complex(request: Request, id: int, name: str = Form(...), facto
 
 
 @router.get("/edit_user/{login}", response_class=HTMLResponse)
-async def show_edit_page_user(request: Request, login: str):
+async def show_edit_page_user(request: Request, login: str, admin: None = Depends(verify_admin)):
     """ Функция для отображения страницы редактирования комплекса """
 
     user_data = await get_user(login)
@@ -230,9 +225,10 @@ async def show_edit_page_user(request: Request, login: str):
 
 
 @router.post("/update_user/{id}")
-async def update_user(request: Request, id: int, data: UpdateUserModel = Form(...)):
+async def update_user(request: Request, id: int, data: UpdateUserModel = Form(...), admin: None = Depends(verify_admin)):
     """ Функция для обновления данных комплекса """
 
+    
     # if complex_id not in complexes:
     #     raise HTTPException(status_code=404, detail="Complex not found")
 
@@ -244,21 +240,32 @@ async def update_user(request: Request, id: int, data: UpdateUserModel = Form(..
 
 
 @router.get("/analitic", response_class=HTMLResponse)
-async def show_analitic(request: Request):
+async def show_analitic(request: Request, admin: None = Depends(verify_admin)):
     """ Функция для отображения аналитики """
+
+    if 'user' not in request.session:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    role = request.session.get("role")
+    if role != "admin":
+        raise HTTPException(status_code=401, detail="Not authenticated how admin")
 
     res = await get_analitic()
     return templates.TemplateResponse("admin/analitic.html", {"request": request, "data": res})
 
 @router.get("/kill_analitic")
-async def kill_analitic():
+async def kill_analitic(request: Request, admin: None = Depends(verify_admin)):
+    """ Удаление данных статистики """
+    
     data = await delete_analitic()
 
     return RedirectResponse(url="/analitic", status_code=303)
 
 
 @router.get("/export_users/csv")
-async def export_users_csv():
+async def export_users_csv(request: Request, admin: None = Depends(verify_admin)):
+    """ Экспорт данных по пользователям """
+    
     data = await get_users()
 
     # Преобразуйте данные в DataFrame
@@ -273,7 +280,9 @@ async def export_users_csv():
 
 
 @router.get("/export_complexes/csv")
-async def export_complexes_csv():
+async def export_complexes_csv(request: Request, admin: None = Depends(verify_admin)):
+    """ Экспорт данных по комплексам """
+
     data = await get_complexes()
 
     # Преобразуйте данные в DataFrame
@@ -288,7 +297,9 @@ async def export_complexes_csv():
 
 
 @router.get("/export_works/csv")
-async def export_works_csv():
+async def export_works_csv(request: Request, admin: None = Depends(verify_admin)):
+    """ Экспорт данных по работам """
+    
     data = await get_data()
 
     # Преобразуйте данные в DataFrame
