@@ -2,13 +2,9 @@
 
 import logging
 import asyncpg
-from config import DATABASE_URL
+from config import DATABASE_URL, logger
 
 from schemas.document import Document
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def insert_data(doc: Document):

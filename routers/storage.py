@@ -15,10 +15,10 @@ router = APIRouter()
 
 
 async def verify_admin(request: Request):
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    role = request.session.get("role")
+    role = request.state.session.get("role")
     if role != "admin":
         raise HTTPException(status_code=401, detail="Not authenticated how admin")
 

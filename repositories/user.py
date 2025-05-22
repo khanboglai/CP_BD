@@ -1,15 +1,11 @@
 """ Функции для работы с таблицей пользователей """
 
-import logging
 import asyncpg
 import bcrypt
-from config import DATABASE_URL, DATABASE_URL_ADM
+from config import DATABASE_URL, DATABASE_URL_ADM, logger
 
 from schemas.user import UpdateUserModel
 
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 def hash_password(password: str):

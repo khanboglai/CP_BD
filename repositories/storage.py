@@ -1,12 +1,8 @@
 """ Функции для работы с таблицей пользователей """
 
-import logging
 import asyncpg
-from config import DATABASE_URL, DATABASE_URL_ADM
+from config import DATABASE_URL, DATABASE_URL_ADM, logger
 
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def insert_data(storage_data: dict):
@@ -103,12 +99,12 @@ async def get_row(complex_name: str):
 
     try:
         conn  = await asyncpg.connect(DATABASE_URL)
-        query = """SELECT * FROM storage WHERE complex_name=$1"""
+        query = """SELECT * FROM complexes WHERE name ILIKE $1"""
 
         res = await conn.fetchrow(query, complex_name)
 
         await conn.close()
-
+        logger.info("Result of search for complex_name %s", complex_name, res)
         return res
     except asyncpg.PostgresError as e:
         logger.error(e)

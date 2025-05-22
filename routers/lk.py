@@ -21,10 +21,10 @@ logger = logging.getLogger(__name__)
 async def lk(request: Request):
     """ Функция для отображения личного кабиента """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    user = request.session.get('user')
+    user = request.state.session.get('user')
     res = await get_user(user)
     act = await get_statistic(user)
     

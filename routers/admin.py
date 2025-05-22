@@ -47,10 +47,10 @@ except Exception as e:
 
 
 async def verify_admin(request: Request):
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    role = request.session.get("role")
+    role = request.state.session.get("role")
     if role != "admin":
         raise HTTPException(status_code=401, detail="Not authenticated how admin")
 
@@ -105,7 +105,7 @@ async def download_file(filename: str, request: Request, admin: None = Depends(v
 async def delete_usr(request: Request, login: str, admin: None = Depends(verify_admin)):
     """ Функция для удаления пользователя """
 
-    user = request.session.get('user')
+    user = request.state.session.get('user')
     if user == login:
         return templates.TemplateResponse("admin/midlle_delet.html", {"request": request})
     
@@ -245,10 +245,10 @@ async def update_user(request: Request, id: int, data: UpdateUserModel = Form(..
 async def show_analitic(request: Request, admin: None = Depends(verify_admin)):
     """ Функция для отображения аналитики """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    role = request.session.get("role")
+    role = request.state.session.get("role")
     if role != "admin":
         raise HTTPException(status_code=401, detail="Not authenticated how admin")
 

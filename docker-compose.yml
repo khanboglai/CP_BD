@@ -43,6 +43,12 @@ services:
     volumes:
       - minio_data:/data  # Хранение данных MinIO
 
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+
 volumes:
   data:
   minio_data:

@@ -1,12 +1,7 @@
 """ Функции для работы с таблицей заявок """
-
-import logging
+import json
 import asyncpg
-from config import DATABASE_URL
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from config import DATABASE_URL, logger
 
 
 async def get_data():
@@ -42,7 +37,6 @@ async def update_get_row(id: int):
 
         # tt = [dict(elem) for elem in row]
         await conn.close()
-
         return row
     except ConnectionError as e:
         logger.error(e)

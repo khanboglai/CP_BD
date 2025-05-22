@@ -77,5 +77,51 @@
             <a href="/export_users/csv" class="btn btn-info">Экспортировать данные</a>
         </div>
     </div>
+
+    <script>
+        // Подключение к WebSocket серверу FastAPI
+        const ws = new WebSocket("ws://0.0.0.0:8000/ws");
+
+        // Обработка входящих сообщений
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            console.log("Получено уведомление:", data);
+
+            if (data.status === "completed") {
+                const taskId = data.task_id;
+
+                // Показываем системное уведомление (если разрешено)
+                if (Notification.permission === "granted") {
+                    new Notification("Заявка выполнена", {
+                        body: "ID заявки: " + taskId,
+                        icon: "/static/icon.png"  // можно заменить на свой путь к иконке
+                    });
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            new Notification("Заявка выполнена", {
+                                body: "ID заявки: " + taskId
+                            });
+                        }
+                    });
+                }
+
+                // Также можем показать alert
+                alert("Заявка выполнена! ID: " + taskId);
+            }
+        };
+
+        // Обработка ошибок
+        ws.onerror = function(error) {
+            console.log("Ошибка WebSocket:", error);
+        };
+
+        // Обработка закрытия соединения
+        ws.onclose = function() {
+            console.log("Соединение с WebSocket закрыто");
+            // Можно попытаться переподключиться через setTimeout
+        };
+    </script>
+
 </body>
 </html>

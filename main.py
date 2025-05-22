@@ -1,18 +1,32 @@
 """ Main app """
+import asyncio
 
-import logging
-
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
-from repositories.init_db import init_db
+from starlette.websockets import WebSocketDisconnect
 
+from middleware import RedisSessionMiddleware
+from contextlib import asynccontextmanager
 from routers import auth, storage, trouble_tickets, admin, lk
+from config import logger
+from redis_session import redis_listener
+
+
+active_connections = []
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    logger.info("Start app")
+    asyncio.create_task(redis_listener(active_connections))
+    logger.info("Redis Listener up")
+    yield
+    logger.info("Stop app")
 
 
 # инициализация приложения
-app = FastAPI()
+app = FastAPI(title="Сервисный центр",lifespan=lifespan)
 
 # подключение маршрутов
 app.include_router(auth.router, tags=["auth"])
@@ -25,19 +39,20 @@ templates = Jinja2Templates(directory="templates")
 
 
 # session
-app.add_middleware(SessionMiddleware, secret_key="your_secret_key", max_age=3600)
-
-# logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app.add_middleware(RedisSessionMiddleware)
 
 
-@app.on_event("startup")
-async def startup():
-    """ Инициализация базы данных """
 
-    logger.info("Start app")
-    # await init_db()
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    active_connections.append(websocket)
+    try:
+        while True:
+            await websocket.receive_text()
+    except Exception as e:
+        active_connections.remove(websocket)
+        logger.info(f"{e}")
 
 
 @app.get("/", response_class=HTMLResponse)

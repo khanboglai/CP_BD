@@ -1,5 +1,5 @@
 """ Маршруты для страницы заявок """
-
+import json
 import os
 import pytz
 import logging
@@ -11,10 +11,13 @@ from fastapi.templating import Jinja2Templates
 import asyncpg
 import boto3
 
+from redis_session import redis_client
+from repositories.analitic import clear_analytic_cache
+from repositories.files import clear_cached_files
 from repositories.tt import get_data, update_get_row, get_details, cancel_update
 from repositories.document import insert_data
 from repositories.complex import get_complex
-from repositories.works import insert_row
+from repositories.works import insert_row, clear_works_cache
 from repositories.storage import get_detail_name, insert_used_detalis
 from config import DATABASE_URL
 from schemas.document import Document
@@ -50,7 +53,7 @@ except Exception as e:
 async def read_table(request: Request, id: int = None):
     """ отображение данных на странице """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     error_msg = None
@@ -70,7 +73,7 @@ async def read_table(request: Request, id: int = None):
 async def create_report(request: Request, item_id: int = Form(...)):
     """ Форма для отчета """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     item = await update_get_row(item_id)
@@ -93,7 +96,7 @@ async def submit_report(request: Request,
                         selected_details: list = Form(None)):
     """ Создание отчета """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
 
@@ -115,7 +118,7 @@ async def submit_report(request: Request,
         details = await get_details(complex_info['name'])
         return templates.TemplateResponse("worker/report.html", {"request": request, "item": item_data, "details": details, "error": "Добавьте описание работы!"})
 
-    user = request.session['user']
+    user = request.state.session['user']
 
     timezone = pytz.timezone('Europe/Moscow')
     creation_time = datetime.now(timezone)
@@ -160,7 +163,7 @@ async def submit_report(request: Request,
             name=report_filename,
             creation_date=creation_time.astimezone(pytz.utc).replace(tzinfo=None),
             file_path=report_filename,
-            author_login=request.session.get('user')
+            author_login=request.state.session.get('user')
         )
 
         await insert_data(doc)
@@ -168,6 +171,10 @@ async def submit_report(request: Request,
         os.remove(report_filename)
 
         logger.info("Created report")
+        await clear_analytic_cache()
+        await clear_works_cache()
+        await clear_cached_files()
+        await redis_client.publish("ticket_updates", json.dumps({"task_id": id, "status": "completed"}))
     except Exception as e:
         logger.error(f"Error with report creations: {e}")
         raise HTTPException(status_code=500, detail="Произошла ошибка при создании отчета.")
@@ -179,10 +186,10 @@ async def submit_report(request: Request,
 @router.get("/files", response_class=HTMLResponse)
 async def read_root(request: Request):
     """ Функция для отображения файлов на странице """
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    user = request.session.get('user')
+    user = request.state.session.get('user')
 
     # Получаем список PDF-файлов для конкретного пользователя
     try:
@@ -212,13 +219,13 @@ async def read_root(request: Request):
 async def get_pdf(pdf_name: str, request: Request):
     """ Функция для отображения файлов """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     pdf_path = f"{pdf_name}"  # Путь к файлу в MinIO
     try:
         # Получаем файл из MinIO
-        user = request.session.get('user')
+        user = request.state.session.get('user')
         response = s3_client.get_object(Bucket=BUCKET_NAME, Key=f"{user}/{pdf_path}")
         return StreamingResponse(response['Body'], media_type='application/pdf', headers={"Content-Disposition": f"inline; filename={pdf_name}"})
     except Exception as e:

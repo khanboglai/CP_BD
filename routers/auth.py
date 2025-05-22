@@ -34,9 +34,9 @@ async def login(request: Request, login: str = Form(...), password: str = Form(.
     if status == 0:
         return templates.TemplateResponse("login.html", {"request": request, "error": "Пользователя с такими данными не существует"})
 
-    request.session['user'] = login
-    request.session['id'] = status['id']
-    request.session['role'] = status['usr_role']
+    request.state.session['user'] = login
+    request.state.session['id'] = status['id']
+    request.state.session['role'] = status['usr_role']
 
     if status['usr_role'] == "admin":
         return RedirectResponse(url="/admin/users", status_code=303)
@@ -48,7 +48,7 @@ async def logout(request: Request):
 
     """ выход из учетной записи """
 
-    request.session.pop('user', None)
+    request.state.session.pop('user', None)
     return templates.TemplateResponse("login.html", {"request": request})
 
 
@@ -57,10 +57,10 @@ async def get_register_form(request: Request):
 
     """ отображение страницы регистрации """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    role = request.session.get("role")
+    role = request.state.session.get("role")
     if role != "admin":
         raise HTTPException(status_code=401, detail="Not authenticated how admin")
 
@@ -79,10 +79,10 @@ async def register_user(
 ):
     """ сохранение данных в базе """
 
-    if 'user' not in request.session:
+    if 'user' not in request.state.session:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    role = request.session.get("role")
+    role = request.state.session.get("role")
     if role != "admin":
         raise HTTPException(status_code=401, detail="Not authenticated how admin")
 
